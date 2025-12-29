@@ -3,181 +3,202 @@
 <head>
 <meta charset="UTF-8">
 <title>Nepean Knights – Executive Hub</title>
-<link rel="stylesheet" href="style.css">
-
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
 :root {
-  --primary-color: #E41F26; /* Red */
-  --secondary-color: #FFD200; /* Gold */
-  --accent-color: #000000; /* Black */
-  --bg-color: #FFE680; /* Light gold */
-  --card-bg: #FFF2CC; /* Lighter gold */
+  --primary-color: #E41F26;
+  --secondary-color: #FFD200;
+  --accent-color: #000;
+  --bg-color: #FFE680;
+  --card-bg: #FFF2CC;
 }
 
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #FFD200, #E41F26);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  margin:0; font-family:Arial,sans-serif;
+  background: linear-gradient(135deg,#FFD200,#E41F26);
+  display:flex; justify-content:center; align-items:center; height:100vh;
 }
 
-/* Card */
-.login-card {
-  background-color: var(--card-bg);
-  border-radius: 15px;
-  padding: 40px 30px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-  text-align: center;
-  width: 360px;
-  position: relative;
+.card {
+  background: var(--card-bg);
+  border-radius:15px; padding:40px 30px; text-align:center; width:360px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.3);
 }
 
-/* Logo & Banner */
-.login-card img.logo {
-  height: 120px;
-  margin-bottom: 20px;
-  cursor: pointer;
-  transition: transform 0.3s ease;
+.card img.logo {
+  height:120px; margin-bottom:20px; cursor:pointer; transition:transform 0.3s;
 }
-.login-card img.logo:hover {
-  transform: scale(1.1);
-}
+.card img.logo:hover { transform: scale(1.1); }
 
-.login-card img.banner {
-  height: 50px;
-  margin-bottom: 25px;
-}
+.card h2 { color: var(--primary-color); margin-bottom:25px; }
 
-.login-card h2 {
-  color: var(--primary-color);
-  margin-bottom: 25px;
-}
+input { width:100%; padding:12px; margin:10px 0; border-radius:6px; border:1px solid #ccc; }
+button { width:100%; padding:12px; margin-top:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
+button.login-btn { background: var(--secondary-color); color: var(--accent-color); }
+button.signup-btn { background: var(--primary-color); color: #fff; }
+button.forgot-btn { background: #555; color:#fff; }
+button:hover { opacity:0.9; }
 
-/* Inputs */
-.login-card input {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
+#errorMessage { color:red; margin-top:10px; font-weight:bold; }
 
-/* Buttons */
-.login-card button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 1rem;
-  transition: opacity 0.2s ease;
-}
+#dashboard, #adminPanel { display:none; text-align:center; }
+#logout-btn, #approve-btn { margin-top:20px; padding:10px 20px; border:none; border-radius:6px; background:#555; color:#fff; font-weight:bold; cursor:pointer; }
+#logout-btn:hover, #approve-btn:hover { opacity:0.9; }
 
-button.login-btn {
-  background-color: var(--secondary-color);
-  color: var(--accent-color);
-}
-
-button.signup-btn {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-#loginOptions {
-  display: none;
-  margin-top: 20px;
-}
-
-#errorMessage {
-  color: red;
-  margin-top: 10px;
-  font-weight: bold;
-}
+.user-item { display:flex; justify-content:space-between; margin:10px 0; padding:10px; background:#fff8dc; border-radius:6px; }
 </style>
 </head>
 <body>
 
-<div class="login-card">
-  <img src="nepean-knights-logo.png" alt="Nepean Knights Logo" class="logo" onclick="showLoginOptions()">
-  <img src="knights-banner-updated.png" alt="Banner" class="banner">
+<div class="card" id="loginCard">
+  <img src="nepean-knights-logo.png" class="logo" alt="Logo">
   <h2>Executive Hub</h2>
 
   <div id="loginOptions">
-    <input type="email" id="email" placeholder="Email" required>
-    <input type="password" id="password" placeholder="Password" required>
-
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
     <button class="login-btn" onclick="login()">Login</button>
-    <button class="signup-btn" onclick="showSignUp()">Create Account</button>
-    <button class="signup-btn" style="background:#555555;" onclick="forgotPassword()">Forgot Password?</button>
-
+    <button class="signup-btn" onclick="showSignUp()">Request Account</button>
+    <button class="forgot-btn" onclick="forgotPassword()">Forgot Password?</button>
     <div id="errorMessage"></div>
   </div>
 </div>
 
+<div id="dashboard">
+  <h1>Welcome to the Dashboard!</h1>
+  <p>You are logged in.</p>
+  <button id="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div id="adminPanel">
+  <h1>Admin Panel – Pending Users</h1>
+  <div id="pendingUsersList"></div>
+  <button id="logout-btn" onclick="logout()">Logout</button>
+</div>
+
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
-  authDomain: "nepean-knights-executive-hub.firebaseapp.com",
-  projectId: "nepean-knights-executive-hub",
-  storageBucket: "nepean-knights-executive-hub.firebasestorage.app",
-  messagingSenderId: "103399385512",
-  appId: "1:103399385512:web:bbd8ac65b5c8be5332159d"
+  apiKey:"AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
+  authDomain:"nepean-knights-executive-hub.firebaseapp.com",
+  projectId:"nepean-knights-executive-hub",
+  storageBucket:"nepean-knights-executive-hub.firebasestorage.app",
+  messagingSenderId:"103399385512",
+  appId:"1:103399385512:web:bbd8ac65b5c8be5332159d"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const db = firebase.firestore();
 
-// Show login options when logo clicked
-function showLoginOptions() {
-  const options = document.getElementById("loginOptions");
-  options.style.display = options.style.display === "none" ? "block" : "none";
-}
+// Admin email list
+const adminEmails = ["admin@example.com"]; // Replace with actual admin emails
 
-// Login function
 function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
-
   auth.signInWithEmailAndPassword(email, password)
-    .then(() => { window.location.href = "dashboard.html"; })
-    .catch(err => { document.getElementById("errorMessage").textContent = err.message; });
+    .then(async (userCredential) => {
+      const uid = userCredential.user.uid;
+      const userDoc = await db.collection('users').doc(uid).get();
+      const userData = userDoc.exists ? userDoc.data() : null;
+
+      if(adminEmails.includes(email)){
+        showAdminPanel();
+        return;
+      }
+
+      if(!userData || !userData.approved){
+        alert("Your account is pending approval by admin.");
+        auth.signOut();
+        return;
+      }
+
+      // Show dashboard
+      document.getElementById("loginCard").style.display="none";
+      document.getElementById("dashboard").style.display="block";
+    })
+    .catch(err => {
+      document.getElementById("errorMessage").textContent = err.message;
+    });
 }
 
-// Sign up function
 function showSignUp() {
   const email = prompt("Enter your email:");
   const password = prompt("Enter your password (6+ characters):");
   if(email && password){
     auth.createUserWithEmailAndPassword(email, password)
-      .then(() => alert("Account created! You can now login."))
+      .then(async (userCredential)=>{
+        const uid = userCredential.user.uid;
+        await db.collection('users').doc(uid).set({
+          email: email,
+          approved: false
+        });
+        alert("Account request submitted. Waiting for admin approval.");
+      })
       .catch(err => alert(err.message));
   }
 }
 
-// Forgot password
 function forgotPassword() {
   const email = prompt("Enter your email to reset password:");
   if(email){
     auth.sendPasswordResetEmail(email)
-      .then(() => alert("Password reset email sent!"))
-      .catch(err => alert(err.message));
+      .then(()=>alert("Password reset email sent!"))
+      .catch(err=>alert(err.message));
   }
 }
+
+function logout() {
+  auth.signOut().then(()=>{
+    document.getElementById("dashboard").style.display="none";
+    document.getElementById("adminPanel").style.display="none";
+    document.getElementById("loginCard").style.display="block";
+  });
+}
+
+// Admin Panel
+function showAdminPanel(){
+  document.getElementById("loginCard").style.display="none";
+  document.getElementById("adminPanel").style.display="block";
+  loadPendingUsers();
+}
+
+async function loadPendingUsers(){
+  const listDiv = document.getElementById("pendingUsersList");
+  listDiv.innerHTML="";
+  const snapshot = await db.collection('users').where('approved','==',false).get();
+  snapshot.forEach(doc=>{
+    const div = document.createElement("div");
+    div.className = "user-item";
+    div.innerHTML = `<span>${doc.data().email}</span> <button onclick="approveUser('${doc.id}')">Approve</button>`;
+    listDiv.appendChild(div);
+  });
+}
+
+function approveUser(uid){
+  db.collection('users').doc(uid).update({approved:true})
+    .then(()=>loadPendingUsers());
+}
+
+// Keep user logged in
+auth.onAuthStateChanged(user=>{
+  if(user){
+    if(adminEmails.includes(user.email)){
+      showAdminPanel();
+    } else {
+      db.collection('users').doc(user.uid).get().then(doc=>{
+        if(doc.exists && doc.data().approved){
+          document.getElementById("loginCard").style.display="none";
+          document.getElementById("dashboard").style.display="block";
+        }
+      });
+    }
+  }
+});
 </script>
 
 </body>
 </html>
+
 
