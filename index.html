@@ -100,7 +100,7 @@ body {
   <input type="password" id="password" placeholder="Password" required>
   <button onclick="login()">Login</button>
 
-  <span class="signup-link" onclick="showSignUp()">Create an Account</span>
+  <span class="signup-link" onclick="showSignUp()">Request Account</span>
 
   <div id="errorMessage"></div>
 </div>
@@ -144,7 +144,7 @@ async function login() {
       return;
     }
 
-    // Redirect approved users to dashboard
+    // Redirect approved users to the dashboard
     window.location.href = "dashboard.html";
 
   } catch(err) {
@@ -171,14 +171,14 @@ async function showSignUp() {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    alert("Account created! Wait for admin approval before logging in.");
+    alert("Account request submitted! Wait for admin approval before logging in.");
     await auth.signOut();
   } catch(err) {
     alert("Error: " + err.message);
   }
 }
 
-// Optional: allow clicking the logo to start login
+// Optional: allow clicking the logo to focus on the email input
 function startLogin() {
   document.getElementById("email").focus();
 }
