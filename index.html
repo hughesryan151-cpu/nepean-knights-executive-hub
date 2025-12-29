@@ -3,70 +3,106 @@
 <head>
 <meta charset="UTF-8">
 <title>Nepean Knights – Login</title>
+<link rel="stylesheet" href="style.css">
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
+:root {
+  --primary-color: #E41F26;
+  --secondary-color: #FFD200;
+  --accent-color: #000;
+  --bg-color: #FFE680;
+  --card-bg: #FFF2CC;
+}
+
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #FFD200, #E41F26);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #FFD200, #E41F26);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
+
 .login-card {
-    background-color: #FFF2CC;
-    border-radius: 15px;
-    padding: 40px 30px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    text-align: center;
-    width: 350px;
+  background-color: var(--card-bg);
+  border-radius: 15px;
+  padding: 40px 30px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  text-align: center;
+  width: 350px;
 }
+
 .login-card img.logo {
-    height: 80px;
-    margin-bottom: 15px;
+  height: 80px;
+  margin-bottom: 15px;
+  cursor: pointer;
 }
+
 .login-card h2 {
-    color: #E41F26;
-    margin-bottom: 25px;
+  color: var(--primary-color);
+  margin-bottom: 25px;
 }
+
 .login-card input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
 }
+
 .login-card button {
-    width: 100%;
-    background-color: #FFD200;
-    color: #000;
-    padding: 12px;
-    margin-top: 15px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
+  width: 100%;
+  background-color: var(--secondary-color);
+  color: var(--accent-color);
+  padding: 12px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
 }
-.login-card button:hover { opacity: 0.9; }
-#errorMessage { color: red; margin-top: 10px; font-weight: bold; }
+
+.login-card button:hover {
+  opacity: 0.9;
+}
+
+#errorMessage {
+  color: red;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.signup-link {
+  margin-top: 15px;
+  display: block;
+  color: var(--primary-color);
+  cursor: pointer;
+  text-decoration: underline;
+}
 </style>
 </head>
 <body>
 
 <div class="login-card">
-    <img src="nepean-knights-logo.png" alt="Logo" class="logo">
-    <h2>Executive Login</h2>
+  <img src="nepean-knights-logo.png" alt="Nepean Knights Logo" class="logo" onclick="startLogin()">
+  <h2>Executive Login</h2>
 
-    <input type="email" id="email" placeholder="Email" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <button onclick="login()">Login</button>
+  <input type="email" id="email" placeholder="Email" required>
+  <input type="password" id="password" placeholder="Password" required>
+  <button onclick="login()">Login</button>
 
-    <div id="errorMessage"></div>
+  <span class="signup-link" onclick="showSignUp()">Create an Account</span>
+
+  <div id="errorMessage"></div>
 </div>
 
 <script>
@@ -82,49 +118,75 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// --- Login Function ---
+// Login function
 async function login() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const errorMessage = document.getElementById("errorMessage");
-    errorMessage.textContent = '';
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  document.getElementById("errorMessage").textContent = "";
 
-    try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
+  try {
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    const user = userCredential.user;
 
-        // Admin account bypasses approval
-        if(email === 'Admin' || email.toLowerCase() === 'admin@example.com') {
-            window.location.href = "dashboard.html";
-            return;
-        }
-
-        // Check approval status in Firestore
-        const doc = await db.collection('users').doc(user.uid).get();
-        if(!doc.exists) {
-            await auth.signOut();
-            errorMessage.textContent = "User record not found.";
-            return;
-        }
-
-        const data = doc.data();
-        if(!data.approved) {
-            await auth.signOut();
-            errorMessage.textContent = "Your account is pending admin approval.";
-            return;
-        }
-
-        // Approved user
-        window.location.href = "dashboard.html";
-
-    } catch(err) {
-        console.error(err);
-        errorMessage.textContent = err.message;
+    // Get user data from Firestore
+    const doc = await db.collection('users').doc(user.uid).get();
+    if(!doc.exists) {
+      alert("User record not found.");
+      await auth.signOut();
+      return;
     }
+
+    const userData = doc.data();
+
+    if(!userData.approved) {
+      alert("You are not approved yet. Please wait for admin approval.");
+      await auth.signOut();
+      return;
+    }
+
+    // Redirect approved users to dashboard
+    window.location.href = "dashboard.html";
+
+  } catch(err) {
+    document.getElementById("errorMessage").textContent = err.message;
+  }
+}
+
+// Sign-up function
+async function showSignUp() {
+  const email = prompt("Enter your email:");
+  const password = prompt("Enter your password:");
+  if(!email || !password) return;
+
+  try {
+    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+
+    // Add user to Firestore with approved: false
+    await db.collection('users').doc(user.uid).set({
+      email: email,
+      approved: false,
+      role: 'user',
+      uid: user.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("Account created! Wait for admin approval before logging in.");
+    await auth.signOut();
+  } catch(err) {
+    alert("Error: " + err.message);
+  }
+}
+
+// Optional: allow clicking the logo to start login
+function startLogin() {
+  document.getElementById("email").focus();
 }
 </script>
+
 </body>
 </html>
+
 
 
 
