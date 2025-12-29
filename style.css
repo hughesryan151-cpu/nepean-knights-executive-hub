@@ -1,0 +1,37 @@
+main {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  overflow-y: auto; /* Make main content scrollable */
+  box-sizing: border-box;
+}
+
+/* Make cards expand naturally but stay within screen width */
+.card {
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+  word-wrap: break-word; /* Wrap long text */
+}
+
+/* Inputs and textareas fill width */
+input, select, textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Buttons */
+button {
+  display: inline-block;
+  margin-top: 10px;
+}
+
+
