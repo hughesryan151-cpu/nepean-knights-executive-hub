@@ -2,30 +2,68 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Nepean Knights Login</title>
+<title>Nepean Knights – Executive Login</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
-body{font-family:Arial,sans-serif;margin:0;background:linear-gradient(135deg,#FFD200,#E41F26);display:flex;justify-content:center;align-items:center;height:100vh;}
-.card{background:#FFF2CC;border-radius:10px;padding:40px;width:350px;text-align:center;box-shadow:0 5px 15px rgba(0,0,0,0.3);}
-input{width:100%;padding:12px;margin:10px 0;border-radius:6px;border:1px solid #ccc;box-sizing:border-box;}
-button{width:100%;padding:12px;margin-top:10px;background:#E41F26;color:#FFD200;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
-button:hover{opacity:.9;}
-#errorMessage{color:red;margin-top:10px;font-weight:bold;}
-a{display:block;margin-top:10px;color:#E41F26;text-decoration:none;}
-a:hover{text-decoration:underline;}
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #FFD200, #E41F26);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.login-card {
+  background-color: #FFF2CC;
+  border-radius: 15px;
+  padding: 40px 30px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  text-align: center;
+  width: 350px;
+}
+.login-card img.logo {
+  height: 80px;
+  margin-bottom: 15px;
+}
+.login-card h2 {
+  color: #E41F26;
+  margin-bottom: 25px;
+}
+.login-card input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+.login-card button {
+  width: 100%;
+  background-color: #FFD200;
+  color: #000;
+  padding: 12px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+}
+#errorMessage { color: red; margin-top: 10px; font-weight: bold; }
 </style>
 </head>
 <body>
 
-<div class="card">
-  <h2>Nepean Knights Login</h2>
-  <input type="text" id="username" placeholder="Username or Email">
-  <input type="password" id="password" placeholder="Password">
+<div class="login-card">
+  <img src="nepean-knights-logo.png" alt="Nepean Knights Logo" class="logo">
+  <h2>Executive Login</h2>
+  <input type="email" id="email" placeholder="Email" required>
+  <input type="password" id="password" placeholder="Password" required>
   <button onclick="login()">Login</button>
   <div id="errorMessage"></div>
-  <a href="register.html">Create Account</a>
 </div>
 
 <script>
@@ -39,47 +77,24 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore();
 
-async function login(){
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value;
+function login() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
-  const errorDiv = document.getElementById('errorMessage');
-  errorDiv.textContent = '';
-
-  // Hardcoded admin login
-  if(username === "Admin" && password === "Ainsley123"){
-    window.location.href = "admin-approval.html";
-    return;
-  }
-
-  // Regular users login
-  try {
-    const userCredential = await auth.signInWithEmailAndPassword(username, password);
-    const user = userCredential.user;
-
-    const doc = await db.collection('users').doc(user.uid).get();
-    if(!doc.exists){
-      errorDiv.textContent = "Your account is not registered. Please create an account.";
-      await auth.signOut();
-      return;
-    }
-    if(!doc.data().approved){
-      errorDiv.textContent = "Your account is pending approval by the admin.";
-      await auth.signOut();
-      return;
-    }
-
-    window.location.href = "dashboard.html";
-  } catch(err){
-    errorDiv.textContent = err.message;
-  }
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => {
+      window.location.href = "dashboard.html";
+    })
+    .catch(err => {
+      document.getElementById("errorMessage").textContent = err.message;
+    });
 }
 </script>
 
 </body>
 </html>
+
 
 
 
