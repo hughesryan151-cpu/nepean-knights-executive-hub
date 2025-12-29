@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Suspensions – Nepean Knights</title>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+<style>
+:root {
+  --primary-color: #E41F26; 
+  --secondary-color: #FFD200; 
+  --accent-color: #000000; 
+  --bg-color: #FFE680; 
+  --card-bg: #FFF2CC; 
+}
+
+body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#FFD200,#E41F26); margin:0; }
+header { display:flex; align-items:center; justify-content:space-between; background-color:var(--primary-color); color:var(--secondary-color); padding:10px 20px; }
+header img.logo { height:50px; }
+header img.banner { height:50px; }
+header button { background-color:var(--secondary-color); color:var(--accent-color); border:none; padding:10px 15px; border-radius:6px; cursor:pointer; font-weight:bold; }
+header button:hover { opacity:0.9; }
+
+main { padding:20px; }
+.card { background-color: var(--card-bg); border-radius:10px; padding:20px; margin:20px auto; max-width:800px; box-shadow:0 2px 5px rgba(0,0,0,0.2); }
+input, select { width:100%; padding:10px; margin:8px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; }
+button { background-color:var(--secondary-color); color:var(--accent-color); padding:10px 15px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
+button:hover { opacity:0.9; }
+h2 { color:var(--primary-color); text-align:center; }
+
+table { width:100%; border-collapse: collapse; margin-top:20px; }
+th, td { border:1px solid #ccc; padding:10px; text-align:left; }
+th { background-color:var(--secondary-color); color:var(--accent-color); }
+tr:nth-child(even) { background-color: #fff8dc; }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex; align-items:center;">
+    <img src="nepean-knights-logo.png" alt="Logo" class="logo">
+    <img src="knights-banner-updated.png" alt="Banner" class="banner">
+  </div>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Suspensions</h2>
+    <button onclick="showForm()">Add New Suspension</button>
+
+    <section id="suspensionForm" style="display:none; margin-top:20px;">
+      <input type="text" id="incidentNumber" placeholder="Incident Number (YY-MM-001)">
+      <input type="text" id="playerName" placeholder="Player Name">
+      <input type="text" id="teamName" placeholder="Team">
+      <input type="text" id="suspensionLength" placeholder="Suspension Length">
+      <input type="datetime-local" id="timeStarted">
+      <input type="datetime-local" id="timeEnded">
+      <select id="linkedInvestigation">
+        <option value="">Linked Investigation</option>
+      </select>
+      <button onclick="saveSuspension()">Save Suspension</button>
+    </section>
+
+    <h3 style="margin-top:30px;">Existing Suspensions</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Incident #</th>
+          <th>Player</th>
+          <th>Team</th>
+          <th>Length</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Investigation</th>
+        </tr>
+      </thead>
+      <tbody id="suspensionList"></tbody>
+    </table>
+  </div>
+
+  <button onclick="window.location.href='dashboard.html'" style="margin:20px auto; display:block;">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+  </button>
+</main>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
+  authDomain: "nepean-knights-executive-hub.firebaseapp.com",
+  projectId: "nepean-knights-executive-hub",
+  storageBucket: "nepean-knights-executive-hub.firebasestorage.app",
+  messagingSenderId: "103399385512",
+  appId: "1:103399385512:web:bbd8ac65b5c8be5332159d"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+auth.onAuthStateChanged(user=>{ if(!user) window.location.href="index.html"; });
+function logout(){ auth.signOut().then(()=> window.location.href="index.html"); }
+
+function showForm(){ document.getElementById('suspensionForm').style.display='block'; }
+
+function loadInvestigations(){
+  const select = document.getElementById('linkedInvestigation');
+  select.innerHTML='<option value="">Linked Investigation</option>';
+  db.collection('investigations').orderBy('timestamp','desc').get().then(snapshot=>{
+    snapshot.forEach(doc=>{
+      const data = doc.data();
+      const option = document.createElement('option');
+      option.value = doc.id;
+      option.textContent = `${data.incidentNumber} - ${data.teamName}`;
+      select.appendChild(option);
+    });
+  });
+}
+
+function saveSuspension(){
+  const incidentNumber = document.getElementById('incidentNumber').value.trim();
+  const playerName = document.getElementById('playerName').value.trim();
+  const teamName = document.getElementById('teamName').value.trim();
+  const suspensionLength = document.getElementById('suspensionLength').value.trim();
+  const timeStarted = document.getElementById('timeStarted').value;
+  const timeEnded = document.getElementById('timeEnded').value;
+  const linkedInvestigation = document.getElementById('linkedInvestigation').value;
+
+  if(!incidentNumber || !playerName || !teamName || !suspensionLength || !timeStarted || !timeEnded){
+    alert("Please fill all required fields.");
+    return;
+  }
+
+  db.collection('suspensions').add({
+    incidentNumber, playerName, teamName, suspensionLength, timeStarted, timeEnded, linkedInvestigation,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>{
+    alert("Suspension saved successfully!");
+    document.getElementById('suspensionForm').reset();
+    document.getElementById('suspensionForm').style.display='none';
+    loadSuspensions();
+  });
+}
+
+function loadSuspensions(){
+  const tbody = document.getElementById('suspensionList');
+  tbody.innerHTML='';
+  db.collection('suspensions').orderBy('timestamp','desc').get().then(snapshot=>{
+    snapshot.forEach(doc=>{
+      const d = doc.data();
+      const tr = document.createElement('tr');
+      const link = d.linkedInvestigation ? `<a href="investigations.html#${d.linkedInvestigation}" target="_blank">View</a>` : 'None';
+      tr.innerHTML = `
+        <td>${d.incidentNumber}</td>
+        <td>${d.playerName}</td>
+        <td>${d.teamName}</td>
+        <td>${d.suspensionLength}</td>
+        <td>${new Date(d.timeStarted).toLocaleString()}</td>
+        <td>${new Date(d.timeEnded).toLocaleString()}</td>
+        <td>${link}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+loadInvestigations();
+loadSuspensions();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nepean Knights – Competitive Compliance</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<style>
+:root {
+  --primary-color: #E41F26;
+  --secondary-color: #FFD200;
+  --accent-color: #000;
+  --bg-color: #FFE680;
+  --card-bg: #FFF2CC;
+}
+
+body { font-family: Arial, sans-serif; margin:0; background: linear-gradient(135deg,#FFD200,#E41F26); }
+header { display:flex; align-items:center; justify-content:space-between; background-color:var(--primary-color); color:var(--secondary-color); padding:10px 20px; }
+header img.logo { height:50px; margin-right:10px; }
+header img.banner { height:50px; }
+header button { background-color:var(--secondary-color); color:var(--accent-color); border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold; }
+header button:hover { opacity:0.9; }
+
+.dashboard { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; padding:15px; }
+.card { background-color:var(--card-bg); max-width:1100px; margin:15px auto; padding:15px; border-radius:10px; }
+.team-card { border:2px solid var(--primary-color); margin-top:15px; padding:15px; border-radius:8px; }
+.staff-card { border:1px solid #ccc; margin-top:10px; padding:10px; border-radius:6px; }
+input, select { width:100%; padding:6px; margin:4px 0; }
+.alert { background:#ffcccc; margin:8px auto; padding:10px; max-width:1100px; border-radius:6px; }
+h2,h3,h4 { color:var(--primary-color); }
+</style>
+</head>
+
+<body>
+
+<header>
+  <div style="display:flex; align-items:center;">
+    <img src="nepean-knights-logo.png" alt="Logo" class="logo">
+    <img src="knights-banner-updated.png" alt="Banner" class="banner">
+  </div>
+  <button onclick="goBack()"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+</header>
+
+<div id="alerts"></div>
+
+<div class="dashboard">
+  <button onclick="openGroup('U9')">U9 Boys</button>
+  <button onclick="openGroup('U11')">U11 Boys</button>
+  <button onclick="openGroup('U13')">U13 Boys</button>
+  <button onclick="openGroup('U15')">U15 Boys</button>
+  <button onclick="openGroup('U17')">U17 Boys</button>
+  <button onclick="openGroup('U22')">U22 Boys</button>
+  <button onclick="openGroup('U13G')">U13 Girls</button>
+  <button onclick="openGroup('U17G')">U17 Girls</button>
+  <button onclick="openGroup('U22G')">U22 Girls</button>
+</div>
+
+<div id="groupSection" class="card" style="display:none;"></div>
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
+  authDomain: "nepean-knights-executive-hub.firebaseapp.com",
+  projectId: "nepean-knights-executive-hub",
+  storageBucket: "nepean-knights-executive-hub.appspot.com"
+});
+
+const db = firebase.firestore();
+const storage = firebase.storage();
+let currentGroup = "";
+let teams = [];
+
+function goBack(){ window.location.href='dashboard.html'; }
+
+function openGroup(group){
+  currentGroup = group;
+  teams = [];
+
+  const section = document.getElementById("groupSection");
+  section.style.display = "block";
+  section.innerHTML = `
+    <h3>${group} Competitive</h3>
+    <button onclick="addTeam()">➕ Add Team</button>
+    <button onclick="saveGroup()">💾 Save ${group}</button>
+  `;
+
+  db.collection("competitive").doc(group).get().then(doc=>{
+    if(doc.exists && doc.data().teams){
+      doc.data().teams.forEach(team=>addTeam(team));
+    }
+  });
+}
+
+function addTeam(team={name:"",eapUrl:"",staff:[]}){
+  const teamIndex = teams.length;
+  teams.push(team);
+
+  const div = document.createElement("div");
+  div.className = "team-card";
+  div.innerHTML = `
+    <h4>Team</h4>
+    <label>Team Name</label>
+    <input value="${team.name}" oninput="teams[${teamIndex}].name=this.value">
+    <label>Emergency Action Plan (EAP)</label>
+    <input type="file" onchange="uploadFile(event,'eap',${teamIndex})">
+    <div id="staff-${teamIndex}"></div>
+    <button onclick="addStaff(${teamIndex})">➕ Add Coach</button>
+  `;
+  document.getElementById("groupSection").appendChild(div);
+
+  team.staff.forEach(s=>addStaff(teamIndex,s));
+}
+
+function addStaff(teamIndex,staff={}){
+  const staffIndex = teams[teamIndex].staff.length;
+  teams[teamIndex].staff.push(staff);
+
+  const div = document.createElement("div");
+  div.className="staff-card";
+  div.innerHTML=`
+    <label>Role</label>
+    <select onchange="teams[${teamIndex}].staff[${staffIndex}].role=this.value">
+      <option></option>
+      <option ${staff.role==="Head Coach"?"selected":""}>Head Coach</option>
+      <option ${staff.role==="Assistant Coach"?"selected":""}>Assistant Coach</option>
+      <option ${staff.role==="Trainer"?"selected":""}>Trainer</option>
+    </select>
+    <label>Name</label>
+    <input value="${staff.name||""}" oninput="teams[${teamIndex}].staff[${staffIndex}].name=this.value">
+    <label>Phone</label>
+    <input value="${staff.phone||""}" oninput="teams[${teamIndex}].staff[${staffIndex}].phone=this.value">
+    <label>NCCP</label>
+    <input type="file" onchange="uploadFile(event,'nccp',${teamIndex},${staffIndex})">
+    <label>VSC</label>
+    <input type="file" onchange="uploadFile(event,'vsc',${teamIndex},${staffIndex})">
+    <label>First Aid</label>
+    <input type="file" onchange="uploadFile(event,'firstAid',${teamIndex},${staffIndex})">
+  `;
+  document.getElementById(`staff-${teamIndex}`).appendChild(div);
+}
+
+function uploadFile(e,type,teamIndex,staffIndex){
+  const file = e.target.files[0];
+  if(!file) return;
+  const teamName = teams[teamIndex].name || "unnamed";
+  const path = type==="eap"
+    ? `competitive/${currentGroup}/${teamName}/EAP/${file.name}`
+    : `competitive/${currentGroup}/${teamName}/CERTS/${file.name}`;
+  storage.ref(path).put(file).then(snap=>{
+    snap.ref.getDownloadURL().then(url=>{
+      if(type==="eap") teams[teamIndex].eapUrl=url;
+      else teams[teamIndex].staff[staffIndex][type+"Url"]=url;
+      alert("Upload successful");
+    });
+  });
+}
+
+function saveGroup(){
+  db.collection("competitive").doc(currentGroup).set({teams});
+  alert(currentGroup+" saved");
+  checkCompliance();
+}
+
+function checkCompliance(){
+  const alerts=[];
+  db.collection("competitive").get().then(snap=>{
+    snap.forEach(doc=>{
+      const group=doc.id;
+      doc.data().teams?.forEach(team=>{
+        if(!team.eapUrl) alerts.push(`${group} – ${team.name}: Missing EAP`);
+        team.staff?.forEach(s=>{
+          if(!s.nccpUrl) alerts.push(`${group} – ${team.name}: ${s.name} missing NCCP`);
+          if(!s.vscUrl && s.role==="Head Coach") alerts.push(`${group} – ${team.name}: Head Coach missing VSC`);
+          if(!s.firstAidUrl) alerts.push(`${group} – ${team.name}: ${s.name} missing First Aid`);
+        });
+      });
+    });
+    document.getElementById("alerts").innerHTML =
+      alerts.map(a=>`<div class="alert">${a}</div>`).join("");
+  });
+}
+setTimeout(checkCompliance,1000);
+</script>
+
+</body>
+</html>
