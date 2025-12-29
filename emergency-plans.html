@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Emergency Action Plans – Nepean Knights</title>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+<style>
+:root {
+  --primary-color: #E41F26; 
+  --secondary-color: #FFD200; 
+  --accent-color: #000000; 
+  --bg-color: #FFE680; 
+  --card-bg: #FFF2CC; 
+}
+body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#FFD200,#E41F26); margin:0; }
+header { display:flex; align-items:center; justify-content:space-between; background-color:var(--primary-color); color:var(--secondary-color); padding:10px 20px; }
+header img.logo { height:50px; }
+header img.banner { height:50px; }
+header button { background-color:var(--secondary-color); color:var(--accent-color); border:none; padding:10px 15px; border-radius:6px; cursor:pointer; font-weight:bold; }
+header button:hover { opacity:0.9; }
+
+main { padding:20px; }
+.card { background-color: var(--card-bg); border-radius:10px; padding:20px; margin:20px auto; max-width:800px; box-shadow:0 2px 5px rgba(0,0,0,0.2); }
+input, textarea, select { width:100%; padding:10px; margin:8px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; }
+textarea { resize: vertical; }
+button { background-color:var(--secondary-color); color:var(--accent-color); padding:10px 15px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
+button:hover { opacity:0.9; }
+h2 { color:var(--primary-color); text-align:center; }
+
+.eap-list { margin-top:30px; }
+.eap-card { background-color: #fff8dc; padding:15px; border-radius:10px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.2); cursor:pointer; }
+.eap-card:hover { background-color: #fff2b2; }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex; align-items:center;">
+    <img src="nepean-knights-logo.png" alt="Logo" class="logo">
+    <img src="knights-banner-updated.png" alt="Banner" class="banner">
+  </div>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Emergency Action Plans</h2>
+    <button onclick="showForm()">Add New EAP</button>
+
+    <section id="eapForm" style="display:none; margin-top:20px;">
+      <input type="text" id="arenaName" placeholder="Arena/Field Name">
+      <input type="text" id="streetAddress" placeholder="Street Address">
+      <input type="text" id="cityProvince" placeholder="City/Province (e.g., Ottawa, ON)" value="Ottawa, ON">
+      <input type="text" id="intersection" placeholder="Closest Major Intersection">
+      <input type="text" id="accessPoint" placeholder="Field Access Point">
+      <input type="text" id="gps" placeholder="GPS Coordinates (Optional)">
+      <textarea id="emergencyContacts" placeholder="Emergency Contact Numbers"></textarea>
+      <textarea id="personnel" placeholder="Designated Personnel"></textarea>
+      <textarea id="equipment" placeholder="Equipment Locations"></textarea>
+      <textarea id="protocols" placeholder="Lacrosse Safety Protocols"></textarea>
+      <textarea id="weather" placeholder="Weather & Environmental"></textarea>
+      <textarea id="emsScript" placeholder="EMS Script"></textarea>
+      <textarea id="additionalNotes" placeholder="Additional Notes/Directions"></textarea>
+      <button onclick="saveEAP()">Save EAP</button>
+    </section>
+  </div>
+
+  <div class="eap-list" id="eapList"></div>
+
+  <button onclick="window.location.href='dashboard.html'" style="margin:20px auto; display:block;">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+  </button>
+</main>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
+  authDomain: "nepean-knights-executive-hub.firebaseapp.com",
+  projectId: "nepean-knights-executive-hub",
+  storageBucket: "nepean-knights-executive-hub.firebasestorage.app",
+  messagingSenderId: "103399385512",
+  appId: "1:103399385512:web:bbd8ac65b5c8be5332159d"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+auth.onAuthStateChanged(user=>{ if(!user) window.location.href="index.html"; });
+function logout(){ auth.signOut().then(()=> window.location.href="index.html"); }
+
+function showForm(){ document.getElementById('eapForm').style.display='block'; }
+
+function saveEAP(){
+  const arenaName = document.getElementById('arenaName').value.trim();
+  if(!arenaName){ alert('Please enter arena name'); return; }
+
+  db.collection('eap').doc(arenaName).set({
+    arenaName,
+    streetAddress: document.getElementById('streetAddress').value,
+    cityProvince: document.getElementById('cityProvince').value,
+    intersection: document.getElementById('intersection').value,
+    accessPoint: document.getElementById('accessPoint').value,
+    gps: document.getElementById('gps').value,
+    emergencyContacts: document.getElementById('emergencyContacts').value,
+    personnel: document.getElementById('personnel').value,
+    equipment: document.getElementById('equipment').value,
+    protocols: document.getElementById('protocols').value,
+    weather: document.getElementById('weather').value,
+    emsScript: document.getElementById('emsScript').value,
+    additionalNotes: document.getElementById('additionalNotes').value,
+    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>{
+    alert('EAP saved!');
+    document.getElementById('eapForm').reset();
+    document.getElementById('eapForm').style.display='none';
+    loadEAPs();
+  });
+}
+
+function loadEAPs(){
+  const list = document.getElementById('eapList');
+  list.innerHTML='';
+  db.collection('eap').orderBy('lastUpdated','desc').get().then(snapshot=>{
+    snapshot.forEach(doc=>{
+      const d = doc.data();
+      const div = document.createElement('div');
+      div.className='eap-card';
+      const updated = d.lastUpdated ? d.lastUpdated.toDate().toLocaleString() : '';
+      div.innerHTML = `<strong>${d.arenaName}</strong><br>${d.streetAddress || ''}<br>Last Updated: ${updated}`;
+      div.onclick = ()=> editEAP(d.arenaName);
+      list.appendChild(div);
+    });
+  });
+}
+
+function editEAP(arenaName){
+  db.collection('eap').doc(arenaName).get().then(doc=>{
+    if(doc.exists){
+      const d = doc.data();
+      document.getElementById('eapForm').style.display='block';
+      document.getElementById('arenaName').value = d.arenaName;
+      document.getElementById('streetAddress').value = d.streetAddress;
+      document.getElementById('cityProvince').value = d.cityProvince;
+      document.getElementById('intersection').value = d.intersection;
+      document.getElementById('accessPoint').value = d.accessPoint;
+      document.getElementById('gps').value = d.gps;
+      document.getElementById('emergencyContacts').value = d.emergencyContacts;
+      document.getElementById('personnel').value = d.personnel;
+      document.getElementById('equipment').value = d.equipment;
+      document.getElementById('protocols').value = d.protocols;
+      document.getElementById('weather').value = d.weather;
+      document.getElementById('emsScript').value = d.emsScript;
+      document.getElementById('additionalNotes').value = d.additionalNotes;
+    }
+  });
+}
+
+// Load on page open
+loadEAPs();
+</script>
+
+</body>
+</html>
