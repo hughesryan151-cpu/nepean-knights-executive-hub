@@ -8,94 +8,100 @@
 
 <style>
 body {
-  margin: 0;
+  margin:0;
   font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #FFD200, #E41F26);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  background: linear-gradient(135deg,#FFD200,#E41F26);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
 }
-.login-card {
-  background-color: #FFF2CC;
-  border-radius: 15px;
-  padding: 40px 30px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-  text-align: center;
-  width: 350px;
+.card {
+  background-color:#FFF2CC;
+  border-radius:15px;
+  padding:40px 30px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.3);
+  text-align:center;
+  width:350px;
 }
-.login-card img.logo {
-  height: 80px;
-  margin-bottom: 15px;
-}
-.login-card h2 {
-  color: #E41F26;
-  margin-bottom: 25px;
-}
-.login-card input {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-.login-card button {
-  width: 100%;
-  background-color: #FFD200;
-  color: #000;
-  padding: 12px;
-  margin-top: 15px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 1rem;
-}
-#errorMessage { color: red; margin-top: 10px; font-weight: bold; }
+.card h2 { color:#E41F26; margin-bottom:20px; }
+.card input { width:100%; padding:12px; margin:10px 0; border-radius:6px; border:1px solid #ccc; }
+.card button { width:100%; padding:12px; margin-top:15px; border:none; border-radius:6px; background-color:#FFD200; color:#000; cursor:pointer; font-weight:bold; }
+.card button:hover { opacity:0.9; }
+#message { color:red; margin-top:10px; font-weight:bold; }
+.link { color:#E41F26; cursor:pointer; text-decoration:underline; display:block; margin-top:10px; }
 </style>
 </head>
 <body>
 
-<div class="login-card">
-  <img src="nepean-knights-logo.png" alt="Nepean Knights Logo" class="logo">
+<div class="card" id="loginCard">
   <h2>Executive Login</h2>
   <input type="email" id="email" placeholder="Email" required>
   <input type="password" id="password" placeholder="Password" required>
   <button onclick="login()">Login</button>
-  <div id="errorMessage"></div>
+  <div id="message"></div>
+  <span class="link" onclick="showRegister()">Create Account</span>
+  <span class="link" onclick="showForgot()">Forgot Password?</span>
+</div>
+
+<div class="card" id="registerCard" style="display:none;">
+  <h2>Create Account</h2>
+  <input type="email" id="regEmail" placeholder="Email" required>
+  <input type="password" id="regPassword" placeholder="Password" required>
+  <button onclick="register()">Register</button>
+  <span class="link" onclick="showLogin()">Back to Login</span>
+  <div id="regMessage"></div>
+</div>
+
+<div class="card" id="forgotCard" style="display:none;">
+  <h2>Reset Password</h2>
+  <input type="email" id="forgotEmail" placeholder="Enter your email">
+  <button onclick="resetPassword()">Send Reset Email</button>
+  <span class="link" onclick="showLogin()">Back to Login</span>
+  <div id="forgotMessage"></div>
 </div>
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
-  authDomain: "nepean-knights-executive-hub.firebaseapp.com",
-  projectId: "nepean-knights-executive-hub",
-  storageBucket: "nepean-knights-executive-hub.appspot.com",
-  messagingSenderId: "103399385512",
-  appId: "1:103399385512:web:bbd8ac65b5c8be5332159d"
+  apiKey:"AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
+  authDomain:"nepean-knights-executive-hub.firebaseapp.com",
+  projectId:"nepean-knights-executive-hub",
+  storageBucket:"nepean-knights-executive-hub.appspot.com",
+  messagingSenderId:"103399385512",
+  appId:"1:103399385512:web:bbd8ac65b5c8be5332159d"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+function showRegister(){ document.getElementById('loginCard').style.display='none'; document.getElementById('registerCard').style.display='block'; }
+function showLogin(){ document.getElementById('loginCard').style.display='block'; document.getElementById('registerCard').style.display='none'; document.getElementById('forgotCard').style.display='none'; }
+function showForgot(){ document.getElementById('loginCard').style.display='none'; document.getElementById('forgotCard').style.display='block'; }
 
-  auth.signInWithEmailAndPassword(email, password)
-    .then(() => {
-      window.location.href = "dashboard.html";
-    })
-    .catch(err => {
-      document.getElementById("errorMessage").textContent = err.message;
-    });
+function login(){
+  const email=document.getElementById('email').value.trim();
+  const password=document.getElementById('password').value;
+  auth.signInWithEmailAndPassword(email,password)
+  .then(()=>window.location.href='dashboard.html')
+  .catch(err=>document.getElementById('message').textContent=err.message);
+}
+
+function register(){
+  const email=document.getElementById('regEmail').value.trim();
+  const password=document.getElementById('regPassword').value;
+  auth.createUserWithEmailAndPassword(email,password)
+  .then(()=>{document.getElementById('regMessage').textContent="Account created! You can now log in.";})
+  .catch(err=>document.getElementById('regMessage').textContent=err.message);
+}
+
+function resetPassword(){
+  const email=document.getElementById('forgotEmail').value.trim();
+  auth.sendPasswordResetEmail(email)
+  .then(()=>{document.getElementById('forgotMessage').textContent="Reset email sent!";})
+  .catch(err=>document.getElementById('forgotMessage').textContent=err.message);
 }
 </script>
-
 </body>
 </html>
-
-
 
 
 
