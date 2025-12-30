@@ -2,229 +2,328 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Nepean Knights – Incident Dashboard</title>
+<title>Incident & Investigation Dashboard</title>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#f4f4f4}
-header{background:#E41F26;color:#FFD200;padding:10px 20px;display:flex;justify-content:space-between}
-button{padding:8px 12px;border:none;border-radius:5px;cursor:pointer;font-weight:bold}
-.primary{background:#E41F26;color:#FFD200}
-.card{background:#fff;padding:15px;margin:10px 0;border-radius:6px}
-.hidden{display:none}
-.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
-.modal-content{background:#fff;padding:20px;width:600px;max-height:90vh;overflow:auto;border-radius:6px}
-textarea,input{width:100%;padding:8px;margin:5px 0}
-.tab{cursor:pointer;padding:10px;background:#FFD200;display:inline-block;margin-right:5px}
-.tab.active{background:#E41F26;color:#FFD200}
+/* ===== GLOBAL ===== */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f0f2f5; /* FIXED background */
+}
+
+header {
+  background: #E41F26;
+  color: #FFD200;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.primary {
+  background: #E41F26;
+  color: #FFD200;
+}
+
+.secondary {
+  background: #ddd;
+}
+
+.container {
+  padding: 20px;
+}
+
+/* ===== TABS ===== */
+.tab {
+  display: inline-block;
+  padding: 10px 15px;
+  background: #FFD200;
+  margin-right: 5px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.tab.active {
+  background: #E41F26;
+  color: #FFD200;
+}
+
+/* ===== CARDS ===== */
+.card {
+  background: #ffffff;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* ===== MODALS ===== */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: #ffffff;
+  width: 700px;
+  max-width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.modal-content h3 {
+  margin-top: 10px;
+}
+
+/* ===== INPUTS ===== */
+input, textarea {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0 12px 0;
+  box-sizing: border-box;
+}
+
+textarea.large {
+  height: 150px;
+}
+
+.hidden {
+  display: none;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-<h2>Nepean Knights Dashboard</h2>
-<button onclick="logout()">Logout</button>
+  <h2>Incident Dashboard</h2>
+  <button onclick="logout()">Logout</button>
 </header>
 
-<div style="padding:20px">
-<button class="primary" onclick="openIncidentModal()">➕ Create Incident</button>
+<div class="container">
+  <button class="primary" onclick="openIncidentModal()">➕ Create Incident</button>
 
-<div style="margin-top:15px">
-<span class="tab active" onclick="switchTab('activeIncidents')">Active Incidents</span>
-<span class="tab" onclick="switchTab('closedIncidents')">Closed Incidents</span>
-<span class="tab" onclick="switchTab('investigations')">Investigations</span>
+  <div style="margin-top:15px;">
+    <span class="tab active" onclick="switchTab('activeIncidents', this)">Active Incidents</span>
+    <span class="tab" onclick="switchTab('closedIncidents', this)">Closed Incidents</span>
+    <span class="tab" onclick="switchTab('investigations', this)">Investigations</span>
+  </div>
+
+  <div id="activeIncidents"></div>
+  <div id="closedIncidents" class="hidden"></div>
+  <div id="investigations" class="hidden"></div>
 </div>
 
-<div id="activeIncidents"></div>
-<div id="closedIncidents" class="hidden"></div>
-<div id="investigations" class="hidden"></div>
-</div>
-
-<!-- INCIDENT MODAL -->
+<!-- ================= INCIDENT MODAL ================= -->
 <div class="modal" id="incidentModal">
-<div class="modal-content">
-<button onclick="closeIncidentModal()">⬅ Back to Dashboard</button>
-<h3 id="incidentModalTitle">Incident</h3>
+  <div class="modal-content">
 
-<input id="incidentDate" type="date">
-<input id="team" placeholder="Team">
-<input id="arena" placeholder="Arena">
-<textarea id="description" placeholder="Description"></textarea>
-<textarea id="notes" placeholder="Notes"></textarea>
+    <button class="secondary" onclick="closeIncidentModal()">← Back to Dashboard</button>
 
-<button class="primary" onclick="saveIncident()">Save</button>
-<button onclick="closeIncident()">Close Incident</button>
-<button onclick="reopenIncident()">Reopen Incident</button>
-<button onclick="printIncident()">Print</button>
-<button onclick="sendToInvestigation()">Send to Investigation</button>
+    <h3 id="incidentTitle">Incident</h3>
+
+    <input type="date" id="incidentDate">
+    <input type="text" id="team" placeholder="Team">
+    <input type="text" id="arena" placeholder="Arena">
+
+    <textarea id="description" class="large" placeholder="Incident Description"></textarea>
+    <textarea id="notes" class="large" placeholder="Notes"></textarea>
+
+    <button class="primary" onclick="saveIncident()">Save Incident</button>
+    <button onclick="closeIncident()">Close Incident</button>
+    <button onclick="reopenIncident()">Reopen Incident</button>
+    <button onclick="sendToInvestigation()">Send to Investigation</button>
+    <button onclick="print()">Print</button>
+  </div>
 </div>
-</div>
 
-<!-- INVESTIGATION MODAL -->
+<!-- ================= INVESTIGATION MODAL ================= -->
 <div class="modal" id="investigationModal">
-<div class="modal-content">
-<button onclick="closeInvestigationModal()">⬅ Back</button>
-<h3>Investigation</h3>
-<textarea id="investigationNotes" style="height:150px"></textarea>
-<button class="primary" onclick="saveInvestigation()">Save</button>
-<button onclick="reopenInvestigation()">Reopen</button>
-<button onclick="printInvestigation()">Print</button>
-</div>
+  <div class="modal-content">
+
+    <button class="secondary" onclick="closeInvestigationModal()">← Back to Dashboard</button>
+
+    <h3>Investigation</h3>
+
+    <textarea id="investigationNotes" class="large" placeholder="Investigation Notes"></textarea>
+
+    <button class="primary" onclick="saveInvestigation()">Save</button>
+    <button onclick="reopenInvestigation()">Reopen</button>
+    <button onclick="print()">Print</button>
+  </div>
 </div>
 
 <script>
-/* FIREBASE */
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
-apiKey:"AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
-authDomain:"nepean-knights-executive-hub.firebaseapp.com",
-projectId:"nepean-knights-executive-hub"
+  apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
+  authDomain: "nepean-knights-executive-hub.firebaseapp.com",
+  projectId: "nepean-knights-executive-hub"
 });
-const auth=firebase.auth();
-const db=firebase.firestore();
 
-/* STATE */
-let currentIncident=null;
-let currentInvestigation=null;
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-/* AUTH */
-auth.onAuthStateChanged(u=>{if(!u)location="index.html"});
-function logout(){auth.signOut()}
+/* ================= STATE ================= */
+let currentIncidentId = null;
+let currentInvestigationId = null;
 
-/* TABS */
-function switchTab(id){
-["activeIncidents","closedIncidents","investigations"].forEach(d=>{
-document.getElementById(d).classList.add("hidden");
+/* ================= AUTH ================= */
+auth.onAuthStateChanged(user => {
+  if (!user) window.location.href = "index.html";
 });
-document.getElementById(id).classList.remove("hidden");
-document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-event.target.classList.add("active");
+
+function logout() {
+  auth.signOut();
 }
 
-/* INCIDENTS */
-function openIncidentModal(data=null){
-document.getElementById("incidentModal").style.display="flex";
-currentIncident=data?.id||null;
-if(data){
-incidentDate.value=data.incidentDate;
-team.value=data.team;
-arena.value=data.arena;
-description.value=data.description;
-notes.value=data.notes;
-}else{
-incidentDate.value="";
-team.value="";
-arena.value="";
-description.value="";
-notes.value="";
-}
+/* ================= TABS ================= */
+function switchTab(tabId, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+
+  ['activeIncidents','closedIncidents','investigations'].forEach(id=>{
+    document.getElementById(id).classList.add('hidden');
+  });
+
+  document.getElementById(tabId).classList.remove('hidden');
 }
 
-function closeIncidentModal(){
-document.getElementById("incidentModal").style.display="none";
-currentIncident=null;
+/* ================= INCIDENTS ================= */
+function openIncidentModal(data=null) {
+  document.getElementById("incidentModal").style.display = "flex";
+  currentIncidentId = data ? data.id : null;
+
+  incidentDate.value = data?.incidentDate || "";
+  team.value = data?.team || "";
+  arena.value = data?.arena || "";
+  description.value = data?.description || "";
+  notes.value = data?.notes || "";
 }
 
-function saveIncident(){
-const payload={
-incidentDate:incidentDate.value,
-team:team.value,
-arena:arena.value,
-description:description.value,
-notes:notes.value,
-status:"open",
-timestamp:firebase.firestore.FieldValue.serverTimestamp()
-};
-if(currentIncident){
-db.collection("incidents").doc(currentIncident).update(payload);
-}else{
-db.collection("incidents").add(payload);
-}
-closeIncidentModal();
-loadIncidents();
+function closeIncidentModal() {
+  document.getElementById("incidentModal").style.display = "none";
+  currentIncidentId = null;
 }
 
-function closeIncident(){
-if(currentIncident)
-db.collection("incidents").doc(currentIncident).update({status:"closed"});
-closeIncidentModal();loadIncidents();
-}
-function reopenIncident(){
-if(currentIncident)
-db.collection("incidents").doc(currentIncident).update({status:"open"});
-closeIncidentModal();loadIncidents();
+function saveIncident() {
+  const payload = {
+    incidentDate: incidentDate.value,
+    team: team.value,
+    arena: arena.value,
+    description: description.value,
+    notes: notes.value,
+    status: "open",
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  if (currentIncidentId) {
+    db.collection("incidents").doc(currentIncidentId).update(payload);
+  } else {
+    db.collection("incidents").add(payload);
+  }
+
+  closeIncidentModal();
 }
 
-function sendToInvestigation(){
-db.collection("incidents").doc(currentIncident).get().then(d=>{
-db.collection("investigations").add({...d.data(),status:"open"});
+function closeIncident() {
+  if (!currentIncidentId) return;
+  db.collection("incidents").doc(currentIncidentId).update({status:"closed"});
+  closeIncidentModal();
+}
+
+function reopenIncident() {
+  if (!currentIncidentId) return;
+  db.collection("incidents").doc(currentIncidentId).update({status:"open"});
+  closeIncidentModal();
+}
+
+function sendToInvestigation() {
+  if (!currentIncidentId) return;
+  db.collection("incidents").doc(currentIncidentId).get().then(doc=>{
+    db.collection("investigations").add({...doc.data(), status:"open"});
+  });
+}
+
+/* ================= LOAD INCIDENTS ================= */
+db.collection("incidents").onSnapshot(snapshot=>{
+  activeIncidents.innerHTML = "";
+  closedIncidents.innerHTML = "";
+
+  snapshot.forEach(doc=>{
+    const d = doc.data();
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <b>${d.team}</b><br>
+      ${d.description}<br><br>
+      <button onclick='openIncidentModal(${JSON.stringify({...d,id:doc.id})})'>Open</button>
+    `;
+    (d.status === "closed" ? closedIncidents : activeIncidents).appendChild(card);
+  });
 });
+
+/* ================= INVESTIGATIONS ================= */
+db.collection("investigations").onSnapshot(snapshot=>{
+  investigations.innerHTML = "";
+  snapshot.forEach(doc=>{
+    const d = doc.data();
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <b>${d.team}</b><br>
+      <button onclick='openInvestigation("${doc.id}")'>Open</button>
+    `;
+    investigations.appendChild(card);
+  });
+});
+
+function openInvestigation(id) {
+  currentInvestigationId = id;
+  db.collection("investigations").doc(id).get().then(doc=>{
+    investigationNotes.value = doc.data().notes || "";
+    investigationModal.style.display = "flex";
+  });
 }
 
-function printIncident(){
-window.print();
+function closeInvestigationModal() {
+  investigationModal.style.display = "none";
+  currentInvestigationId = null;
 }
 
-/* LOAD INCIDENTS */
-function loadIncidents(){
-activeIncidents.innerHTML="";
-closedIncidents.innerHTML="";
-db.collection("incidents").orderBy("timestamp","desc").onSnapshot(s=>{
-s.forEach(doc=>{
-const d=doc.data();
-const div=document.createElement("div");
-div.className="card";
-div.innerHTML=`<b>${d.team}</b><br>${d.description}<br>
-<button onclick='openIncidentModal(${JSON.stringify({...d,id:doc.id})})'>Open</button>`;
-(d.status==="open"?activeIncidents:closedIncidents).appendChild(div);
-});
-});
+function saveInvestigation() {
+  db.collection("investigations").doc(currentInvestigationId)
+    .update({notes: investigationNotes.value});
+  closeInvestigationModal();
 }
 
-/* INVESTIGATIONS */
-function loadInvestigations(){
-investigations.innerHTML="";
-db.collection("investigations").onSnapshot(s=>{
-s.forEach(doc=>{
-const d=doc.data();
-const div=document.createElement("div");
-div.className="card";
-div.innerHTML=`${d.team}<br>
-<button onclick='openInvestigation("${doc.id}")'>Open</button>`;
-investigations.appendChild(div);
-});
-});
+function reopenInvestigation() {
+  db.collection("investigations").doc(currentInvestigationId)
+    .update({status:"open"});
+  closeInvestigationModal();
 }
-
-function openInvestigation(id){
-currentInvestigation=id;
-db.collection("investigations").doc(id).get().then(d=>{
-investigationNotes.value=d.data().notes||"";
-investigationModal.style.display="flex";
-});
-}
-function closeInvestigationModal(){
-investigationModal.style.display="none";
-}
-function saveInvestigation(){
-db.collection("investigations").doc(currentInvestigation).update({
-notes:investigationNotes.value
-});
-closeInvestigationModal();
-}
-function reopenInvestigation(){
-db.collection("investigations").doc(currentInvestigation).update({status:"open"});
-closeInvestigationModal();
-}
-function printInvestigation(){window.print();}
-
-/* INIT */
-loadIncidents();
-loadInvestigations();
 </script>
+
 </body>
 </html>
 
