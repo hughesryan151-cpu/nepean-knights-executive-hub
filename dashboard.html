@@ -38,44 +38,45 @@ body { font-family:'Segoe UI',Arial,sans-serif; min-height:100vh; background:var
 header { display:flex; justify-content:space-between; align-items:center; background-color:var(--primary-color); color:var(--secondary-color); padding:0 20px; height:var(--header-height); box-shadow:var(--shadow-light); }
 header .logo-banner { display:flex; align-items:center; gap:10px; }
 header img.logo, header img.banner { height:50px; }
-header button { background-color:var(--secondary-color); color:var(--accent-color); border:none; padding:10px 18px; border-radius:var(--border-radius); cursor:pointer; font-weight:bold; transition:opacity 0.2s; }
-header button:hover{opacity:0.85;}
+header button { background-color:var(--secondary-color); color:var(--accent-color); border:none; padding:10px 18px; border-radius:var(--border-radius); cursor:pointer; font-weight:bold; transition:opacity 0.2s, transform 0.2s; }
+header button:hover{opacity:0.9; transform:translateY(-2px);}
 
 /* Main */
-main { padding:20px; max-width:1200px; margin:0 auto; }
-h2 { text-align:center; color:var(--primary-color); margin-bottom:15px; font-size:2rem; }
+main { padding:30px 20px; max-width:1200px; margin:0 auto; }
+h2 { text-align:center; color:#fff; margin-bottom:25px; font-size:2.2rem; text-shadow:1px 1px 2px rgba(0,0,0,0.3); }
 
 /* Summary Stats */
-.summary-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:15px; margin-bottom:20px; }
-.summary-card { background-color:var(--card-bg); border-radius:var(--border-radius); padding:15px; display:flex; flex-direction:column; align-items:center; box-shadow:var(--shadow-light); transition:transform 0.3s, box-shadow 0.3s; }
+.summary-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:15px; margin-bottom:30px; }
+.summary-card { background-color:var(--card-bg); border-radius:var(--border-radius); padding:20px; display:flex; flex-direction:column; align-items:center; box-shadow:var(--shadow-light); transition:transform 0.3s, box-shadow 0.3s; }
 .summary-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-heavy); }
-.summary-card i { font-size:2rem; margin-bottom:8px; }
-.summary-card h4 { margin-bottom:5px; font-size:1rem; color:#555; }
-.summary-card span { font-size:1.5rem; font-weight:bold; }
+.summary-card i { font-size:2.2rem; margin-bottom:10px; color:var(--primary-color); }
+.summary-card h4 { margin-bottom:5px; font-size:1rem; color:#555; font-weight:600; text-align:center; }
+.summary-card span { font-size:1.6rem; font-weight:bold; }
 
 /* Search Bar */
-#alertSearch { width:100%; padding:10px 12px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc; font-size:1rem; }
+#alertSearch { width:100%; padding:12px 15px; margin-bottom:20px; border-radius:8px; border:1px solid #ccc; font-size:1rem; transition:box-shadow 0.2s; }
+#alertSearch:focus{ outline:none; box-shadow:0 0 8px rgba(0,0,0,0.2); }
 
 /* Dashboard Grid */
 .dashboard-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; }
-.dashboard-box { background-color:var(--card-bg); border-radius:var(--border-radius); padding:20px; text-align:center; cursor:pointer; box-shadow:var(--shadow-light); transition: transform var(--transition-speed), box-shadow var(--transition-speed), background-color var(--transition-speed); position:relative; }
-.dashboard-box:hover { transform:translateY(-6px); box-shadow:var(--shadow-heavy); }
-.dashboard-box i { font-size:2.5rem; margin-bottom:10px; }
-.dashboard-box h3 { margin:12px 0 8px; font-size:1.1rem; }
+.dashboard-box { background-color:var(--card-bg); border-radius:var(--border-radius); padding:25px 20px; text-align:center; cursor:pointer; box-shadow:var(--shadow-light); transition: transform var(--transition-speed), box-shadow var(--transition-speed), background-color var(--transition-speed); position:relative; }
+.dashboard-box:hover { transform:translateY(-6px); box-shadow:var(--shadow-heavy); background-color:rgba(255,242,204,0.95);}
+.dashboard-box i { font-size:2.5rem; margin-bottom:10px; color:var(--primary-color); }
+.dashboard-box h3 { margin:12px 0 8px; font-size:1.15rem; font-weight:600; }
 
 /* Status Bar */
 .status-bar { position:absolute; top:0; left:0; height:6px; border-top-left-radius:12px; border-top-right-radius:12px; width:0%; transition:width 0.5s, background-color 0.3s; }
 
 /* Badge */
-.badge { display:inline-block; padding:5px 10px; border-radius:8px; font-weight:bold; color:#fff; font-size:0.85rem; margin-top:5px; transition: background-color 0.3s; }
+.badge { display:inline-block; padding:5px 12px; border-radius:10px; font-weight:bold; color:#fff; font-size:0.85rem; margin-top:5px; transition: background-color 0.3s; }
 .badge-pending{background-color:var(--pending-color);}
 .badge-inprogress{background-color:var(--inprogress-color);}
 .badge-completed{background-color:var(--ok-color);}
 
 /* Alerts Section */
-.alerts { background-color:var(--card-bg); border-radius:var(--border-radius); padding:20px; margin-top:25px; box-shadow:var(--shadow-light); transition:all var(--transition-speed);}
-.alerts h3{ margin-bottom:10px; font-size:1.3rem; }
-.alert-item { padding:10px 12px; border-left:5px solid var(--pending-color); margin-bottom:10px; border-radius:6px; background-color:rgba(255,255,255,0.6); opacity:0; transform:translateY(10px); animation:fadeInUp 0.5s forwards;}
+.alerts { background-color:rgba(255,255,255,0.95); border-radius:var(--border-radius); padding:25px; margin-top:30px; box-shadow:var(--shadow-light); }
+.alerts h3{ margin-bottom:15px; font-size:1.3rem; text-align:center; color:var(--primary-color); }
+.alert-item { padding:12px 15px; border-left:5px solid var(--pending-color); margin-bottom:12px; border-radius:6px; background-color:#fff; opacity:0; transform:translateY(10px); animation:fadeInUp 0.5s forwards;}
 @keyframes fadeInUp { to{opacity:1; transform:translateY(0);} }
 .alerts p{text-align:center;color:var(--ok-color);font-weight:bold;}
 @media(max-width:768px){.dashboard-grid, .summary-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}}
@@ -122,11 +123,11 @@ const db = firebase.firestore();
 auth.onAuthStateChanged(user => { if(!user) window.location.href='index.html'; });
 function logout(){auth.signOut().then(()=>window.location.href='index.html');}
 
+// Modules – Investigations removed
 const modules=[
   {name:'House League', icon:'fas fa-users', link:'house-league.html'},
   {name:'Competitive', icon:'fas fa-trophy', link:'competitive.html'},
   {name:'Incidents', icon:'fas fa-exclamation-triangle', link:'incidents.html'},
-  {name:'Investigations', icon:'fas fa-search', link:'investigations.html'},
   {name:'Suspensions', icon:'fas fa-ban', link:'suspensions.html'},
   {name:'Emergency Plans', icon:'fas fa-ambulance', link:'emergency-plans.html'},
   {name:'Arena Maintenance', icon:'fas fa-tools', link:'arena-maintenance.html'},
@@ -140,8 +141,7 @@ function loadDashboard(){
   const summaryMetrics = [
     {name:'Injured Players', icon:'fas fa-procedures', id:'injuredCount'},
     {name:'Active Suspensions', icon:'fas fa-ban', id:'suspensionCount'},
-    {name:'Pending Work Orders', icon:'fas fa-tools', id:'workOrderCount'},
-    {name:'Pending Investigations', icon:'fas fa-search', id:'investigationCount'}
+    {name:'Pending Work Orders', icon:'fas fa-tools', id:'workOrderCount'}
   ];
   summaryGrid.innerHTML='';
   summaryMetrics.forEach(s=>{
@@ -155,7 +155,7 @@ function loadDashboard(){
     const box = document.createElement('div'); box.className='dashboard-box';
     box.innerHTML=`
       <div class="status-bar" id="status-${mod.name.replace(/\s/g,'')}"></div>
-      <i class="${mod.icon}" style="color:#E41F26"></i>
+      <i class="${mod.icon}"></i>
       <h3>${mod.name}</h3>
       <span class="badge" id="badge-${mod.name.replace(/\s/g,'')}" style="display:none;"></span>`;
     box.onclick=()=>window.location.href=mod.link;
@@ -198,20 +198,16 @@ function filterAlerts(){ renderAlerts(); }
 function setupRealtimeListeners(){
   alertsArr=[];
 
-  // Injured Players: automatically skip cleared injuries
+  // Injured Players
   db.collection('injuries').onSnapshot(snap=>{
     let injured=0;
     snap.forEach(doc=>{
       const d = doc.data();
       const now = new Date();
       const returnDT = d.returnDate && d.returnTime ? new Date(d.returnDate+'T'+d.returnTime) : null;
-
-      // Auto mark resolved if cleared or return time passed
       let resolved = d.resolved || false;
       if(d.statusOverride === 'Cleared' || (returnDT && returnDT <= now)) resolved = true;
-
       if(!resolved) injured++;
-      // Update Firestore if resolved changed
       if(resolved && !d.resolved) db.collection('injuries').doc(doc.id).update({resolved: true});
     });
     document.getElementById('injuredCount').textContent = injured;
@@ -234,14 +230,7 @@ function setupRealtimeListeners(){
     updateBadge('Arena Maintenance', pending,'Pending','pending');
   });
 
-  // Pending Investigations
-  db.collection('investigations').onSnapshot(snap=>{
-    let pending=0;
-    snap.forEach(doc=>{ if(!doc.data().resolved) pending++; });
-    document.getElementById('investigationCount').textContent = pending;
-    updateBadge('Investigations', pending,'Pending','pending');
-  });
-
+  // Monitor other collections
   const monitorCollection=(collection, processDoc, badgeId, status='pending', label='Pending')=>{
     db.collection(collection).onSnapshot(snap=>{
       let count=0;
