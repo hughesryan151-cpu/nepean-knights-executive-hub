@@ -20,130 +20,63 @@
             --shadow: 0 4px 12px rgba(0,0,0,0.1);
             --radius: 8px;
             --success: #28a745;
-            --warning: #f39c12;
         }
 
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--light-bg);
-            color: var(--dark);
-        }
-
-        header {
-            background: var(--dark);
-            color: var(--white);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 4px solid var(--primary);
-        }
-
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--light-bg); color: var(--dark); }
+        header { background: var(--dark); color: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--primary); }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
         /* Buttons */
-        .btn {
-            cursor: pointer;
-            border: none;
-            border-radius: var(--radius);
-            padding: 10px 18px;
-            font-weight: 600;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-        }
+        .btn { cursor: pointer; border: none; border-radius: var(--radius); padding: 10px 18px; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: var(--white); }
         .btn-outline { background: transparent; border: 1px solid #ccc; color: #555; }
         .btn-success { background: var(--success); color: white; }
-        .btn-archive { background: #6c757d; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
 
         /* Tabs */
         .tabs-nav { margin: 20px 0; display: flex; gap: 20px; border-bottom: 1px solid #ddd; }
-        .tab {
-            padding: 12px 10px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #777;
-            position: relative;
-        }
+        .tab { padding: 12px 10px; cursor: pointer; font-weight: bold; color: #777; position: relative; }
         .tab.active { color: var(--primary); }
-        .tab.active::after {
-            content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background: var(--primary);
-        }
+        .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background: var(--primary); }
 
         /* Grid & Cards */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-        .card {
-            background: var(--white);
-            border-radius: var(--radius);
-            padding: 20px;
-            box-shadow: var(--shadow);
-            border-top: 4px solid var(--secondary);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .card.archived { opacity: 0.7; border-top-color: #6c757d; }
+        .card { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border-top: 4px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
+        .card h4 { margin: 0; }
+        .card-meta { font-size: 0.8rem; color: #888; }
 
         /* Modals */
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(3px);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        .modal-content {
-            background: var(--white);
-            width: 100%;
-            max-width: 950px;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 30px;
-            border-radius: var(--radius);
-        }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: var(--white); width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; padding: 30px; border-radius: var(--radius); }
 
-        /* Forms */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
         .span-2 { grid-column: span 2; }
-        label { font-weight: bold; font-size: 0.85rem; color: #444; margin-bottom: 5px; display: block; }
+        label { font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; display: block; }
         input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; }
         
         .hidden { display: none; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .status-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
     </style>
 </head>
 
 <body>
 
 <header>
-    <div>
-        <h2 style="margin:0">Nepean Knights</h2>
-        <span style="color:var(--secondary); font-size: 0.8rem; font-weight: bold;">EXECUTIVE MANAGEMENT SYSTEM</span>
-    </div>
+    <div><h2 style="margin:0">Nepean Knights</h2><small>Executive Incident Portal</small></div>
     <div style="display:flex; align-items:center; gap:15px;">
-        <span id="userDisplay" style="font-size: 0.9rem; opacity: 0.8;"></span>
-        <button class="btn btn-outline" style="color:white; border-color:rgba(255,255,255,0.3)" id="btnLogout">Logout</button>
+        <span id="userEmail" style="font-size:0.8rem"></span>
+        <button class="btn btn-outline" style="color:white" id="btnLogout">Logout</button>
     </div>
 </header>
 
 <div class="container">
-    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
         <div class="tabs-nav">
             <div class="tab active" data-tab="incidents">Active Incidents</div>
-            <div class="tab" data-tab="investigations">Investigations</div>
-            <div class="tab" data-tab="archive">Archive</div>
+            <div class="tab" data-tab="investigations">Active Investigations</div>
+            <div class="tab" data-tab="archive">Archive (Closed Cases)</div>
         </div>
-        <button class="btn btn-primary" id="btnNewIncident">＋ Log Incident</button>
+        <button class="btn btn-primary" onclick="openIncidentModal()">＋ New Incident</button>
     </div>
 
     <div id="incidentList" class="grid"></div>
@@ -153,17 +86,17 @@
 
 <div class="modal" id="incidentModal">
     <div class="modal-content">
-        <h2>Incident Intake</h2>
+        <h2>Incident Report</h2>
         <div class="form-grid">
             <div><label>Date</label><input type="date" id="iDate"></div>
-            <div><label>Team/Division</label><input type="text" id="iTeam"></div>
-            <div class="span-2"><label>Location</label><input type="text" id="iArena"></div>
-            <div class="span-2"><label>Initial Description</label><textarea id="iDescription"></textarea></div>
-            <div class="span-2"><label>Internal Notes</label><textarea id="iNotes"></textarea></div>
+            <div><label>Team</label><input type="text" id="iTeam"></div>
+            <div class="span-2"><label>Description</label><textarea id="iDescription" rows="4"></textarea></div>
+            <div class="span-2"><label>Internal Notes</label><textarea id="iNotes" rows="2"></textarea></div>
         </div>
-        <div style="margin-top:25px; display:flex; justify-content: flex-end; gap:10px;">
+        <div style="margin-top:20px; display:flex; justify-content: flex-end; gap:10px;">
             <button class="btn btn-outline" onclick="closeModals()">Cancel</button>
-            <button class="btn btn-primary" id="btnSaveIncident">Save Incident</button>
+            <button class="btn btn-danger" id="btnCloseIncident">Close & Archive</button>
+            <button class="btn btn-primary" id="btnSaveIncident">Save</button>
             <button class="btn btn-success" id="btnPromote">Promote to Investigation</button>
         </div>
     </div>
@@ -171,53 +104,47 @@
 
 <div class="modal" id="investigationModal">
     <div class="modal-content">
-        <div style="display:flex; justify-content: space-between;">
-            <h2>Investigation File</h2>
-            <div id="invStatusBadge" class="status-badge" style="background:var(--secondary)">ACTIVE</div>
-        </div>
+        <h2>Investigation File</h2>
         <div class="form-grid">
-            <div class="span-2"><h4 style="border-bottom: 2px solid var(--primary);">Case Information</h4></div>
+            <div class="span-2"><label>Case Summary</label><textarea id="vSummary" rows="2"></textarea></div>
             <textarea id="vPlayers" placeholder="Players Involved"></textarea>
-            <textarea id="vCoaches" placeholder="Staff Involved"></textarea>
-            <textarea id="vEvidence" class="span-2" placeholder="Evidence Links/Logs"></textarea>
-            
-            <div class="span-2"><h4 style="border-bottom: 2px solid var(--primary);">Findings & Ruling</h4></div>
-            <textarea id="vFindings" placeholder="Findings of Fact"></textarea>
-            <textarea id="vFinalOutcome" placeholder="Final Decision/Sanction"></textarea>
+            <textarea id="vEvidence" placeholder="Evidence Links"></textarea>
+            <textarea id="vFindings" class="span-2" placeholder="Findings of Fact"></textarea>
+            <textarea id="vOutcome" class="span-2" placeholder="Final Decision / Sanction"></textarea>
         </div>
-        <div style="margin-top:25px; display:flex; justify-content: flex-end; gap:10px;">
-            <button class="btn btn-outline" onclick="closeModals()">Close View</button>
-            <button class="btn btn-archive" id="btnArchiveInv">Archive Case</button>
+        <div style="margin-top:20px; display:flex; justify-content: flex-end; gap:10px;">
+            <button class="btn btn-outline" onclick="closeModals()">Back</button>
+            <button class="btn btn-danger" id="btnCloseInvestigation">Close & Archive Case</button>
             <button class="btn btn-primary" id="btnSaveInvestigation">Save Progress</button>
         </div>
     </div>
 </div>
 
 <script>
-/* ================= FIREBASE INIT ================= */
+/* ================= FIREBASE SETUP ================= */
 const firebaseConfig = {
     apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
     authDomain: "nepean-knights-executive-hub.firebaseapp.com",
     projectId: "nepean-knights-executive-hub"
 };
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 let currentId = null;
-let currentInvestigationId = null;
-let currentUser = null;
+let currentInvId = null;
+let userEmail = "";
 
-/* ================= AUTH & AUDIT ================= */
 auth.onAuthStateChanged(user => {
     if (!user) window.location.href = "index.html";
-    currentUser = user;
-    document.getElementById('userDisplay').innerText = user.email;
+    userEmail = user.email;
+    document.getElementById('userEmail').innerText = userEmail;
 });
 
-async function logAction(action, docId, type) {
+/* ================= AUDIT LOGGING ================= */
+async function audit(action, docId, type) {
     await db.collection('audit_logs').add({
-        user: currentUser.email,
+        executive: userEmail,
         action: action,
         docId: docId,
         type: type,
@@ -225,7 +152,7 @@ async function logAction(action, docId, type) {
     });
 }
 
-/* ================= NAVIGATION ================= */
+/* ================= TAB NAVIGATION ================= */
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -237,38 +164,81 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
 });
 
-function closeModals() {
-    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-}
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
 
-/* ================= CORE LOGIC ================= */
+/* ================= DATA LOADING ================= */
 
-// 1. INCIDENTS
-db.collection('incidents').where('archived', '==', false).orderBy('timestamp', 'desc').onSnapshot(snap => {
+// Load Incidents (Active)
+db.collection('incidents').where('status', '==', 'active').onSnapshot(snap => {
     const list = document.getElementById('incidentList');
     list.innerHTML = '';
     snap.forEach(doc => {
         const d = doc.data();
-        const card = createCard(d.team, d.incidentDate, d.description, () => openIncident(doc.id, d));
-        list.appendChild(card);
+        list.innerHTML += `<div class="card">
+            <div class="card-meta">${d.incidentDate}</div>
+            <h4>${d.team}</h4>
+            <p>${d.description?.substring(0,80)}...</p>
+            <button class="btn btn-outline" onclick="editIncident('${doc.id}')">Open</button>
+        </div>`;
     });
 });
 
-function createCard(title, subtitle, text, onClick) {
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.innerHTML = `<div><small>${subtitle}</small><h4>${title}</h4><p>${text?.substring(0,80)}...</p></div><button class="btn btn-outline">Open</button>`;
-    div.querySelector('button').onclick = onClick;
-    return div;
+// Load Investigations (Active)
+db.collection('investigations').where('status', '==', 'active').onSnapshot(snap => {
+    const list = document.getElementById('investigationList');
+    list.innerHTML = '';
+    snap.forEach(doc => {
+        const d = doc.data();
+        list.innerHTML += `<div class="card" style="border-top-color:var(--primary)">
+            <div class="card-meta">INVESTIGATION</div>
+            <h4>${d.team || 'Case File'}</h4>
+            <button class="btn btn-primary" onclick="editInvestigation('${doc.id}')">View File</button>
+        </div>`;
+    });
+});
+
+// Load Archive (Both Incidents and Investigations)
+function loadArchive() {
+    const list = document.getElementById('archiveList');
+    list.innerHTML = '';
+    
+    // Get Closed Incidents
+    db.collection('incidents').where('status', '==', 'archived').get().then(snap => {
+        snap.forEach(doc => renderArchiveItem(doc.data(), 'Incident Archive'));
+    });
+    // Get Closed Investigations
+    db.collection('investigations').where('status', '==', 'archived').get().then(snap => {
+        snap.forEach(doc => renderArchiveItem(doc.data(), 'Investigation Archive'));
+    });
+}
+function renderArchiveItem(d, label) {
+    document.getElementById('archiveList').innerHTML += `<div class="card" style="opacity:0.7; border-top-color:#666">
+        <div class="status-tag" style="background:#666; color:white; width:fit-content">${label}</div>
+        <h4>${d.team || 'Archived'}</h4>
+        <p>${d.incidentDate || ''}</p>
+    </div>`;
+}
+document.querySelector('[data-tab="archive"]').addEventListener('click', loadArchive);
+
+/* ================= ACTIONS ================= */
+
+function openIncidentModal() {
+    currentId = null;
+    document.getElementById('iDate').value = '';
+    document.getElementById('iTeam').value = '';
+    document.getElementById('iDescription').value = '';
+    document.getElementById('iNotes').value = '';
+    document.getElementById('incidentModal').style.display = 'flex';
 }
 
-function openIncident(id, d) {
+async function editIncident(id) {
     currentId = id;
-    document.getElementById('iDate').value = d.incidentDate || '';
-    document.getElementById('iTeam').value = d.team || '';
-    document.getElementById('iArena').value = d.arena || '';
-    document.getElementById('iDescription').value = d.description || '';
-    document.getElementById('iNotes').value = d.notes || '';
+    const doc = await db.collection('incidents').doc(id).get();
+    const d = doc.data();
+    document.getElementById('iDate').value = d.incidentDate;
+    document.getElementById('iTeam').value = d.team;
+    document.getElementById('iDescription').value = d.description;
+    document.getElementById('iNotes').value = d.notes;
     document.getElementById('incidentModal').style.display = 'flex';
 }
 
@@ -276,94 +246,80 @@ document.getElementById('btnSaveIncident').onclick = async () => {
     const data = {
         incidentDate: document.getElementById('iDate').value,
         team: document.getElementById('iTeam').value,
-        arena: document.getElementById('iArena').value,
         description: document.getElementById('iDescription').value,
         notes: document.getElementById('iNotes').value,
-        archived: false,
+        status: 'active',
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
-    if(currentId) {
+    if (currentId) {
         await db.collection('incidents').doc(currentId).update(data);
-        logAction('Updated Incident', currentId, 'incident');
+        audit('Updated Incident', currentId, 'incident');
     } else {
         const ref = await db.collection('incidents').add(data);
-        logAction('Created Incident', ref.id, 'incident');
+        audit('Created Incident', ref.id, 'incident');
     }
     closeModals();
 };
 
-// 2. INVESTIGATIONS
-db.collection('investigations').where('status', '==', 'open').onSnapshot(snap => {
-    const list = document.getElementById('investigationList');
-    list.innerHTML = '';
-    snap.forEach(doc => {
-        const d = doc.data();
-        const card = createCard(d.team, 'ACTIVE FILE', d.findings || 'No findings yet', () => openInvestigation(doc.id, d));
-        list.appendChild(card);
-    });
-});
+document.getElementById('btnCloseIncident').onclick = async () => {
+    if (!currentId) return;
+    if (confirm("Archive this incident? It will be moved to history.")) {
+        await db.collection('incidents').doc(currentId).update({ status: 'archived' });
+        audit('Archived Incident', currentId, 'incident');
+        closeModals();
+    }
+};
 
-// 3. ARCHIVE
-db.collection('investigations').where('status', '==', 'archived').onSnapshot(snap => {
-    const list = document.getElementById('archiveList');
-    list.innerHTML = '';
-    snap.forEach(doc => {
-        const d = doc.data();
-        const card = createCard(d.team, 'ARCHIVED', d.finalOutcome, () => openInvestigation(doc.id, d));
-        card.classList.add('archived');
-        list.appendChild(card);
+document.getElementById('btnPromote').onclick = async () => {
+    if (!currentId) return alert("Save first");
+    const doc = await db.collection('incidents').doc(currentId).get();
+    const d = doc.data();
+    const invRef = await db.collection('investigations').add({
+        team: d.team,
+        incidentDate: d.incidentDate,
+        summary: d.description,
+        status: 'active',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-});
+    await db.collection('incidents').doc(currentId).update({ status: 'archived' });
+    audit('Promoted to Investigation', invRef.id, 'investigation');
+    closeModals();
+};
 
-function openInvestigation(id, d) {
-    currentInvestigationId = id;
+async function editInvestigation(id) {
+    currentInvId = id;
+    const doc = await db.collection('investigations').doc(id).get();
+    const d = doc.data();
+    document.getElementById('vSummary').value = d.summary || '';
     document.getElementById('vPlayers').value = d.players || '';
-    document.getElementById('vCoaches').value = d.coaches || '';
     document.getElementById('vEvidence').value = d.evidence || '';
     document.getElementById('vFindings').value = d.findings || '';
-    document.getElementById('vFinalOutcome').value = d.finalOutcome || '';
-    
-    const badge = document.getElementById('invStatusBadge');
-    badge.innerText = d.status.toUpperCase();
-    badge.style.background = d.status === 'archived' ? '#6c757d' : var(--secondary);
-    
+    document.getElementById('vOutcome').value = d.outcome || '';
     document.getElementById('investigationModal').style.display = 'flex';
 }
 
 document.getElementById('btnSaveInvestigation').onclick = async () => {
-    const data = {
+    await db.collection('investigations').doc(currentInvId).update({
+        summary: document.getElementById('vSummary').value,
         players: document.getElementById('vPlayers').value,
-        coaches: document.getElementById('vCoaches').value,
         evidence: document.getElementById('vEvidence').value,
         findings: document.getElementById('vFindings').value,
-        finalOutcome: document.getElementById('vFinalOutcome').value,
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    await db.collection('investigations').doc(currentInvestigationId).update(data);
-    logAction('Updated Investigation', currentInvestigationId, 'investigation');
-    closeModals();
-};
-
-document.getElementById('btnArchiveInv').onclick = async () => {
-    if(!confirm("Archive this case? It will be moved to the Archive tab.")) return;
-    await db.collection('investigations').doc(currentInvestigationId).update({ status: 'archived' });
-    logAction('Archived Investigation', currentInvestigationId, 'investigation');
-    closeModals();
-};
-
-document.getElementById('btnPromote').onclick = async () => {
-    const snap = await db.collection('incidents').doc(currentId).get();
-    const d = snap.data();
-    const invRef = await db.collection('investigations').add({
-        team: d.team, incidentDate: d.incidentDate, status: 'open', timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        outcome: document.getElementById('vOutcome').value
     });
-    await db.collection('incidents').doc(currentId).update({ archived: true });
-    logAction('Promoted to Investigation', invRef.id, 'investigation');
+    audit('Updated Investigation', currentInvId, 'investigation');
     closeModals();
+};
+
+document.getElementById('btnCloseInvestigation').onclick = async () => {
+    if (confirm("Close this case and archive the decision?")) {
+        await db.collection('investigations').doc(currentInvId).update({ status: 'archived' });
+        audit('Archived Investigation', currentInvId, 'investigation');
+        closeModals();
+    }
 };
 
 document.getElementById('btnLogout').onclick = () => auth.signOut();
-document.getElementById('btnNewIncident').onclick = () => { currentId = null; openIncident(null, {}); };
 </script>
+
 </body>
 </html>
