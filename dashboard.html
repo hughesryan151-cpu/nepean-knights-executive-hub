@@ -101,9 +101,7 @@ h2 { text-align:center; color:var(--primary-color); margin-bottom:15px; font-siz
   <h2>Executive Dashboard</h2>
 
   <!-- Summary Stats -->
-  <div class="summary-grid" id="summaryGrid">
-    <!-- Cards will be generated dynamically -->
-  </div>
+  <div class="summary-grid" id="summaryGrid"></div>
 
   <!-- Alerts Search -->
   <input type="text" id="alertSearch" placeholder="Search alerts..." oninput="filterAlerts()">
@@ -209,10 +207,13 @@ function setupRealtimeListeners(){
   alertsArr=[];
 
   // Injured Players
-  db.collection('injuries').onSnapshot(snap=>{
-    let injured=0;
-    snap.forEach(doc=>{ if(!doc.data().resolved) injured++; });
+  db.collection('injuries').onSnapshot(snap => {
+    let injured = 0;
+    snap.forEach(doc => { if(!doc.data().resolved) injured++; });
+    // Summary card
     document.getElementById('injuredCount').textContent = injured;
+    // Dashboard badge
+    updateBadge('Injuries', injured, 'Active', injured>0?'inprogress':'completed');
   });
 
   // Active Suspensions
@@ -256,5 +257,8 @@ function setupRealtimeListeners(){
 
 loadDashboard();
 </script>
+</body>
+</html>
+
 </body>
 </html>
