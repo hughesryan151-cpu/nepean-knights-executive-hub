@@ -2,213 +2,229 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Nepean Knights Dashboard</title>
+<title>Nepean Knights – Incident Dashboard</title>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
 <style>
-:root { --primary-color:#E41F26; --secondary-color:#FFD200; --accent-color:#000; --card-bg:#FFF2CC; }
-body{margin:0; font-family:Arial,sans-serif; background:linear-gradient(135deg,#FFD200,#E41F26); color:var(--accent-color);}
-header{display:flex; justify-content:space-between; align-items:center; background:var(--primary-color); color:var(--secondary-color); padding:10px 20px;}
-header img{height:50px;}
-header button{background:var(--secondary-color); color:var(--accent-color); border:none; padding:10px 15px; border-radius:6px; cursor:pointer; font-weight:bold;}
-header button:hover{opacity:0.9;}
-.tabs{display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;}
-.tab{padding:10px 15px; background:var(--secondary-color); color:var(--accent-color); border-radius:6px; cursor:pointer; font-weight:bold;}
-.tab.active{background:var(--primary-color); color:var(--secondary-color);}
-.filter-container{margin-bottom:10px; display:flex; gap:10px; flex-wrap:wrap;}
-.card{background: var(--card-bg); border-radius:10px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
-.card-header{display:flex; justify-content:space-between; align-items:center; font-weight:bold; cursor:pointer;}
-.card-actions button{margin-right:5px; font-size:0.9rem; margin-top:5px;}
-.modal{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:999; overflow-y:auto; padding:20px;}
-.modal-content{background: var(--card-bg); border-radius:10px; padding:20px; width:100%; max-width:700px; position:relative; max-height:90vh; overflow-y:auto;}
-.modal-close-btn{position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--primary-color);}
-input,textarea,select{width:100%; padding:10px; margin:8px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;}
-textarea{resize:vertical;}
-button{background: var(--secondary-color); color: var(--accent-color); padding:10px 15px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px;}
-button:hover{opacity:0.9;}
-.attachment-list a{display:block; margin-top:5px;}
-#suspensionFields{margin-top:10px;}
-.closed-label{color:red; font-weight:bold;}
-.tab-content{display:none;}
-.tab-content.active{display:block;}
-.back-dashboard-btn{background:#E41F26;color:#FFD200;padding:8px 12px;margin-bottom:10px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;}
-.back-dashboard-btn:hover{opacity:0.9;}
+body{margin:0;font-family:Arial;background:#f4f4f4}
+header{background:#E41F26;color:#FFD200;padding:10px 20px;display:flex;justify-content:space-between}
+button{padding:8px 12px;border:none;border-radius:5px;cursor:pointer;font-weight:bold}
+.primary{background:#E41F26;color:#FFD200}
+.card{background:#fff;padding:15px;margin:10px 0;border-radius:6px}
+.hidden{display:none}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+.modal-content{background:#fff;padding:20px;width:600px;max-height:90vh;overflow:auto;border-radius:6px}
+textarea,input{width:100%;padding:8px;margin:5px 0}
+.tab{cursor:pointer;padding:10px;background:#FFD200;display:inline-block;margin-right:5px}
+.tab.active{background:#E41F26;color:#FFD200}
 </style>
 </head>
+
 <body>
 
 <header>
-  <div style="display:flex;align-items:center;">
-    <img src="nepean-knights-logo.png" alt="Logo">
-    <h2 style="margin-left:10px;">Nepean Knights Dashboard</h2>
-  </div>
-  <button onclick="logout()">Logout</button>
+<h2>Nepean Knights Dashboard</h2>
+<button onclick="logout()">Logout</button>
 </header>
 
-<main style="padding:20px;">
-  <div style="margin-bottom:15px;">
-    <button onclick="openIncidentModal()" style="background-color:var(--primary-color); color:var(--secondary-color); font-weight:bold; padding:10px 15px; border:none; border-radius:6px; cursor:pointer;">
-      <i class="fas fa-plus"></i> Create Incident
-    </button>
-  </div>
+<div style="padding:20px">
+<button class="primary" onclick="openIncidentModal()">➕ Create Incident</button>
 
-  <div class="tabs">
-    <div class="tab active" data-tab="active-incidents">Active Incidents</div>
-    <div class="tab" data-tab="closed-incidents">Closed Incidents</div>
-    <div class="tab" data-tab="active-investigations">Active Investigations</div>
-    <div class="tab" data-tab="closed-investigations">Closed Investigations</div>
-  </div>
-
-  <div class="filter-container">
-    <input type="text" id="searchFilter" placeholder="Search..." oninput="applyFilters()">
-  </div>
-
-  <div id="active-incidents" class="tab-content active"></div>
-  <div id="closed-incidents" class="tab-content"></div>
-  <div id="active-investigations" class="tab-content"></div>
-  <div id="closed-investigations" class="tab-content"></div>
-</main>
-
-<!-- Incident Modal -->
-<div class="modal" id="incidentModal">
-  <div class="modal-content">
-    <button class="back-dashboard-btn" onclick="backToDashboard('incident')">← Back to Dashboard</button>
-    <button class="modal-close-btn" onclick="closeIncidentModal()">&times;</button>
-    <h2 id="modalTitle">Incident Details</h2>
-    <label>Incident Number</label>
-    <input type="text" id="incidentNumber" disabled>
-    <label>Date</label>
-    <input type="date" id="incidentDate" required>
-    <label>Team</label>
-    <input type="text" id="team" required>
-    <label>Arena</label>
-    <input type="text" id="arena" required>
-    <label>Players (comma-separated)</label>
-    <input type="text" id="players">
-    <label>Coaches (comma-separated)</label>
-    <input type="text" id="coaches">
-    <label>Description / Notes</label>
-    <textarea id="description" rows="5" required></textarea>
-    <label>Actions Taken</label>
-    <textarea id="actionsTaken" rows="3"></textarea>
-    <label>Punishment</label>
-    <input type="text" id="punishment">
-    <div id="suspensionFields" style="display:none;">
-      <label>Suspension Start Date</label>
-      <input type="date" id="suspensionStart">
-      <label>Suspension End Date</label>
-      <input type="date" id="suspensionEnd">
-    </div>
-    <label>Attachments</label>
-    <div class="attachment-list" id="attachmentList"></div>
-    <input type="file" id="attachment" multiple>
-    <label>Investigation Notes</label>
-    <textarea id="investigationNotes" rows="5"></textarea>
-    <div style="margin-top:10px;">
-      <button type="button" id="saveBtn" onclick="saveIncident()">Save Incident</button>
-      <button type="button" onclick="cancelIncidentEdit()">Cancel</button>
-      <button type="button" onclick="reopenIncident()">Reopen Incident</button>
-      <button type="button" onclick="printIncident()">Print Incident</button>
-      <button type="button" onclick="sendToInvestigation()">Send to Investigation</button>
-    </div>
-  </div>
+<div style="margin-top:15px">
+<span class="tab active" onclick="switchTab('activeIncidents')">Active Incidents</span>
+<span class="tab" onclick="switchTab('closedIncidents')">Closed Incidents</span>
+<span class="tab" onclick="switchTab('investigations')">Investigations</span>
 </div>
 
-<!-- Investigation Modal -->
+<div id="activeIncidents"></div>
+<div id="closedIncidents" class="hidden"></div>
+<div id="investigations" class="hidden"></div>
+</div>
+
+<!-- INCIDENT MODAL -->
+<div class="modal" id="incidentModal">
+<div class="modal-content">
+<button onclick="closeIncidentModal()">⬅ Back to Dashboard</button>
+<h3 id="incidentModalTitle">Incident</h3>
+
+<input id="incidentDate" type="date">
+<input id="team" placeholder="Team">
+<input id="arena" placeholder="Arena">
+<textarea id="description" placeholder="Description"></textarea>
+<textarea id="notes" placeholder="Notes"></textarea>
+
+<button class="primary" onclick="saveIncident()">Save</button>
+<button onclick="closeIncident()">Close Incident</button>
+<button onclick="reopenIncident()">Reopen Incident</button>
+<button onclick="printIncident()">Print</button>
+<button onclick="sendToInvestigation()">Send to Investigation</button>
+</div>
+</div>
+
+<!-- INVESTIGATION MODAL -->
 <div class="modal" id="investigationModal">
-  <div class="modal-content">
-    <button class="back-dashboard-btn" onclick="backToDashboard('investigation')">← Back to Dashboard</button>
-    <button class="modal-close-btn" onclick="closeInvestigationModal()">&times;</button>
-    <h2>Investigation Details</h2>
-    
-    <label>Notes</label>
-    <textarea id="investigationEditNotes" rows="8" style="height:120px;"></textarea>
-    
-    <label>Timeline</label>
-    <textarea id="timeline" rows="6" style="height:100px;"></textarea>
-    
-    <label>Interviews</label>
-    <textarea id="interviews" rows="6" style="height:100px;"></textarea>
-    
-    <label>Expert Comments</label>
-    <textarea id="expertComments" rows="6" style="height:100px;"></textarea>
-    
-    <label>Final Notes</label>
-    <textarea id="finalNotes" rows="6" style="height:100px;"></textarea>
-    
-    <label>Recommended Punishment</label>
-    <input type="text" id="recommendedPunishment">
-    
-    <label>Given Punishment</label>
-    <input type="text" id="givenPunishment">
-    
-    <div style="margin-top:10px;">
-      <button onclick="saveInvestigation()">Save</button>
-      <button onclick="cancelInvestigationEdit()">Cancel</button>
-      <button onclick="reopenInvestigation()">Reopen Investigation</button>
-      <button onclick="printInvestigation()">Print Investigation</button>
-    </div>
-  </div>
+<div class="modal-content">
+<button onclick="closeInvestigationModal()">⬅ Back</button>
+<h3>Investigation</h3>
+<textarea id="investigationNotes" style="height:150px"></textarea>
+<button class="primary" onclick="saveInvestigation()">Save</button>
+<button onclick="reopenInvestigation()">Reopen</button>
+<button onclick="printInvestigation()">Print</button>
+</div>
 </div>
 
 <script>
-// ---------------- Firebase ----------------
-const firebaseConfig={
-  apiKey:"AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
-  authDomain:"nepean-knights-executive-hub.firebaseapp.com",
-  projectId:"nepean-knights-executive-hub",
-  storageBucket:"nepean-knights-executive-hub.appspot.com",
-  messagingSenderId:"103399385512",
-  appId:"1:103399385512:web:bbd8ac65b5c8be5332159d"
-};
-firebase.initializeApp(firebaseConfig);
+/* FIREBASE */
+firebase.initializeApp({
+apiKey:"AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
+authDomain:"nepean-knights-executive-hub.firebaseapp.com",
+projectId:"nepean-knights-executive-hub"
+});
 const auth=firebase.auth();
 const db=firebase.firestore();
-const storage=firebase.storage();
-let editingIncidentId=null;
-let editingInvestigationId=null;
 
-// ---------------- Auth ----------------
-auth.onAuthStateChanged(user=>{if(!user)window.location.href="index.html";});
-function logout(){auth.signOut().then(()=>window.location.href="index.html");}
+/* STATE */
+let currentIncident=null;
+let currentInvestigation=null;
 
-// ---------------- Tabs ----------------
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    tab.classList.add('active');
-    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    document.getElementById(tab.dataset.tab).classList.add('active');
-    applyFilters();
-  });
+/* AUTH */
+auth.onAuthStateChanged(u=>{if(!u)location="index.html"});
+function logout(){auth.signOut()}
+
+/* TABS */
+function switchTab(id){
+["activeIncidents","closedIncidents","investigations"].forEach(d=>{
+document.getElementById(d).classList.add("hidden");
 });
-
-// ---------------- Filters ----------------
-function applyFilters(){
-  const filter=document.getElementById('searchFilter').value.toLowerCase();
-  document.querySelectorAll('.tab-content.active .card').forEach(card=>{
-    card.style.display=card.textContent.toLowerCase().includes(filter)?'':'none';
-  });
+document.getElementById(id).classList.remove("hidden");
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+event.target.classList.add("active");
 }
 
-// ---------------- Back to Dashboard ----------------
-function backToDashboard(type){
-  if(type==='incident'){editingIncidentId=null; closeIncidentModal();}
-  if(type==='investigation'){editingInvestigationId=null; closeInvestigationModal();}
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  document.querySelector('[data-tab="active-incidents"]').classList.add('active');
-  document.getElementById('active-incidents').classList.add('active');
-  loadIncidents(); loadInvestigations();
+/* INCIDENTS */
+function openIncidentModal(data=null){
+document.getElementById("incidentModal").style.display="flex";
+currentIncident=data?.id||null;
+if(data){
+incidentDate.value=data.incidentDate;
+team.value=data.team;
+arena.value=data.arena;
+description.value=data.description;
+notes.value=data.notes;
+}else{
+incidentDate.value="";
+team.value="";
+arena.value="";
+description.value="";
+notes.value="";
+}
 }
 
-// ---------------- Incident & Investigation JS ----------------
-// (Here, you need full load/save/edit/close/reopen/send/print functions like previously discussed)
+function closeIncidentModal(){
+document.getElementById("incidentModal").style.display="none";
+currentIncident=null;
+}
 
+function saveIncident(){
+const payload={
+incidentDate:incidentDate.value,
+team:team.value,
+arena:arena.value,
+description:description.value,
+notes:notes.value,
+status:"open",
+timestamp:firebase.firestore.FieldValue.serverTimestamp()
+};
+if(currentIncident){
+db.collection("incidents").doc(currentIncident).update(payload);
+}else{
+db.collection("incidents").add(payload);
+}
+closeIncidentModal();
+loadIncidents();
+}
+
+function closeIncident(){
+if(currentIncident)
+db.collection("incidents").doc(currentIncident).update({status:"closed"});
+closeIncidentModal();loadIncidents();
+}
+function reopenIncident(){
+if(currentIncident)
+db.collection("incidents").doc(currentIncident).update({status:"open"});
+closeIncidentModal();loadIncidents();
+}
+
+function sendToInvestigation(){
+db.collection("incidents").doc(currentIncident).get().then(d=>{
+db.collection("investigations").add({...d.data(),status:"open"});
+});
+}
+
+function printIncident(){
+window.print();
+}
+
+/* LOAD INCIDENTS */
+function loadIncidents(){
+activeIncidents.innerHTML="";
+closedIncidents.innerHTML="";
+db.collection("incidents").orderBy("timestamp","desc").onSnapshot(s=>{
+s.forEach(doc=>{
+const d=doc.data();
+const div=document.createElement("div");
+div.className="card";
+div.innerHTML=`<b>${d.team}</b><br>${d.description}<br>
+<button onclick='openIncidentModal(${JSON.stringify({...d,id:doc.id})})'>Open</button>`;
+(d.status==="open"?activeIncidents:closedIncidents).appendChild(div);
+});
+});
+}
+
+/* INVESTIGATIONS */
+function loadInvestigations(){
+investigations.innerHTML="";
+db.collection("investigations").onSnapshot(s=>{
+s.forEach(doc=>{
+const d=doc.data();
+const div=document.createElement("div");
+div.className="card";
+div.innerHTML=`${d.team}<br>
+<button onclick='openInvestigation("${doc.id}")'>Open</button>`;
+investigations.appendChild(div);
+});
+});
+}
+
+function openInvestigation(id){
+currentInvestigation=id;
+db.collection("investigations").doc(id).get().then(d=>{
+investigationNotes.value=d.data().notes||"";
+investigationModal.style.display="flex";
+});
+}
+function closeInvestigationModal(){
+investigationModal.style.display="none";
+}
+function saveInvestigation(){
+db.collection("investigations").doc(currentInvestigation).update({
+notes:investigationNotes.value
+});
+closeInvestigationModal();
+}
+function reopenInvestigation(){
+db.collection("investigations").doc(currentInvestigation).update({status:"open"});
+closeInvestigationModal();
+}
+function printInvestigation(){window.print();}
+
+/* INIT */
+loadIncidents();
+loadInvestigations();
 </script>
 </body>
 </html>
+
