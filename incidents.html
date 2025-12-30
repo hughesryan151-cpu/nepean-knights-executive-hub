@@ -192,11 +192,17 @@ function backToDashboard(type){
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.querySelector('[data-tab="active-incidents"]').classList.add('active');
   document.getElementById('active-incidents').classList.add('active');
-  applyFilters();
+  loadIncidents(); loadInvestigations();
 }
 
-// ---------------- INCIDENT FUNCTIONS ----------------
-// See previous answer for full working save/load/edit/close/reopen/send/print logic
+// ---------------- Incident Functions ----------------
+// Add full functions here: openIncidentModal, closeIncidentModal, saveIncident, editIncident, sendToInvestigation, closeIncident, reopenIncident, printIncident, loadIncidents
+// ---------------- Investigation Functions ----------------
+// Add full functions here: openInvestigationModal, closeInvestigationModal, saveInvestigation, editInvestigation, closeInvestigation, reopenInvestigation, printInvestigation, loadInvestigations
+</script>
+</body>
+</html>
+
 
 </script>
 </body>
