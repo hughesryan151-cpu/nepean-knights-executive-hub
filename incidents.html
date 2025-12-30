@@ -9,101 +9,39 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background-color: #f2f3f5;
-  font-family: Arial, sans-serif;
-}
-
-header {
-  background: #E41F26;
-  color: #FFD200;
-  padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.container {
-  padding: 20px;
-  background-color: #f2f3f5;
-  min-height: 100vh;
-}
-
-button {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.primary { background:#E41F26; color:#FFD200; }
-.secondary { background:#ddd; }
-
-.tab {
-  display: inline-block;
-  padding: 10px 15px;
-  background: #FFD200;
-  margin-right: 5px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.tab.active { background:#E41F26; color:#FFD200; }
-
-.card {
-  background: white;
-  padding: 15px;
-  margin-top: 10px;
-  border-radius: 6px;
-}
-
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.6);
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-content {
-  background: #f2f3f5;
-  width: 750px;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 20px;
-  border-radius: 8px;
-}
-
-input, textarea {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-}
-
-textarea { height: 120px; }
-
-.hidden { display: none; }
+html,body{margin:0;height:100%;font-family:Arial;background:#f2f3f5}
+header{background:#E41F26;color:#FFD200;padding:15px;display:flex;justify-content:space-between}
+.container{padding:20px}
+button{padding:8px 14px;border:none;border-radius:5px;font-weight:bold;cursor:pointer}
+.primary{background:#E41F26;color:#FFD200}
+.secondary{background:#ddd}
+.tab{padding:10px 15px;background:#FFD200;margin-right:5px;border-radius:4px;cursor:pointer;display:inline-block}
+.tab.active{background:#E41F26;color:#FFD200}
+.card{background:#fff;padding:15px;margin-top:10px;border-radius:6px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
+.modal-content{background:#fff;width:900px;max-height:90vh;overflow-y:auto;padding:20px;border-radius:8px}
+input,textarea{width:100%;padding:8px;margin-bottom:10px}
+textarea{min-height:120px}
+.section-title{font-weight:bold;margin-top:15px;border-bottom:1px solid #ccc}
+.audit{font-size:.85em;background:#f7f7f7;padding:8px;border-radius:4px;margin-top:10px}
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 
 <header>
-  <h2>Incident Dashboard</h2>
-  <button onclick="logout()">Logout</button>
+  <h2>Incident & Investigation Dashboard</h2>
+  <button onclick="firebase.auth().signOut()">Logout</button>
 </header>
 
 <div class="container">
   <button class="primary" onclick="openIncident()">➕ Create Incident</button>
 
-  <div style="margin-top:15px;">
-    <span class="tab active" onclick="showTab('active', this)">Active Incidents</span>
-    <span class="tab" onclick="showTab('closed', this)">Closed Incidents</span>
-    <span class="tab" onclick="showTab('investigations', this)">Investigations</span>
+  <div style="margin-top:15px">
+    <span class="tab active" onclick="showTab('active',this)">Active Incidents</span>
+    <span class="tab" onclick="showTab('closed',this)">Closed Incidents</span>
+    <span class="tab" onclick="showTab('investigations',this)">Investigations</span>
   </div>
 
   <div id="active"></div>
@@ -113,112 +51,187 @@ textarea { height: 120px; }
 
 <!-- INCIDENT MODAL -->
 <div class="modal" id="incidentModal">
-  <div class="modal-content">
-    <button class="secondary" onclick="closeIncident()">← Back to Dashboard View</button>
-    <button class="secondary" onclick="location.href='dashboard.html'">← Back to Dashboard.html</button>
+<div class="modal-content" id="incidentPrint">
+<button class="secondary" onclick="closeIncident()">← Back</button>
+<button class="secondary" onclick="printSection('incidentPrint')">Export PDF</button>
 
-    <h3>Incident</h3>
+<h3>Incident</h3>
+<input id="iDate" type="date">
+<input id="iTeam" placeholder="Team">
+<input id="iArena" placeholder="Arena">
+<textarea id="iDescription" placeholder="Incident Description"></textarea>
+<textarea id="iNotes" placeholder="Internal Notes"></textarea>
 
-    <input id="iDate" type="date">
-    <input id="iTeam" placeholder="Team">
-    <input id="iArena" placeholder="Arena">
-    <textarea id="iDescription" placeholder="Incident Description"></textarea>
-    <textarea id="iNotes" placeholder="Notes"></textarea>
+<button class="primary" onclick="saveIncident()">Save</button>
+<button onclick="closeIncidentStatus()">Close</button>
+<button onclick="deleteIncident()">Delete</button>
+<button onclick="sendToInvestigation()">Send to Investigation</button>
 
-    <button class="primary" onclick="saveIncident()">Save</button>
-    <button onclick="closeIncidentStatus()">Close</button>
-    <button onclick="reopenIncident()">Reopen</button>
-    <button onclick="deleteIncident()">Delete</button>
-    <button onclick="sendToInvestigation()">Send to Investigation</button>
-  </div>
+<div class="section-title">Audit Log</div>
+<div id="incidentAudit"></div>
+</div>
 </div>
 
 <!-- INVESTIGATION MODAL -->
 <div class="modal" id="investigationModal">
-  <div class="modal-content">
-    <button class="secondary" onclick="closeInvestigation()">← Back</button>
+<div class="modal-content" id="investigationPrint">
+<button class="secondary" onclick="closeInvestigation()">← Back</button>
+<button class="secondary" onclick="printSection('investigationPrint')">Export PDF</button>
 
-    <h3>Investigation</h3>
+<h3>Formal Investigation</h3>
 
-    <input id="vDate" type="date">
-    <input id="vTeam">
-    <input id="vArena">
-    <textarea id="vDescription"></textarea>
-    <textarea id="vNotes" placeholder="Investigation Notes"></textarea>
+<div class="section-title">Incident Info</div>
+<input id="vDate" type="date">
+<input id="vTeam">
+<input id="vArena">
+<textarea id="vDescription"></textarea>
 
-    <button class="primary" onclick="saveInvestigation()">Save</button>
-  </div>
+<div class="section-title">People Involved</div>
+<textarea id="vPlayers" placeholder="Players (Name, DOB)"></textarea>
+<textarea id="vCoaches" placeholder="Coaches (Name, DOB)"></textarea>
+<textarea id="vWitnesses" placeholder="Witnesses / Contact"></textarea>
+
+<div class="section-title">Investigation</div>
+<textarea id="vInvestigatorNotes"></textarea>
+<textarea id="vInterviewNotes"></textarea>
+<textarea id="vWitnessStatements"></textarea>
+<textarea id="vEvidence"></textarea>
+
+<div class="section-title">History & Outcome</div>
+<textarea id="vPriorIncidents"></textarea>
+<textarea id="vPriorPunishments"></textarea>
+<textarea id="vRecommendedOutcome"></textarea>
+<textarea id="vFinalOutcome"></textarea>
+
+<button class="primary" onclick="saveInvestigation()">Save Investigation</button>
+<button onclick="closeInvestigationStatus()">Close Investigation</button>
+
+<div class="section-title">Audit Log</div>
+<div id="investigationAudit"></div>
+</div>
 </div>
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
-  authDomain: "nepean-knights-executive-hub.firebaseapp.com",
-  projectId: "nepean-knights-executive-hub"
+  apiKey:"AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
+  authDomain:"nepean-knights-executive-hub.firebaseapp.com",
+  projectId:"nepean-knights-executive-hub"
 });
 
-const db = firebase.firestore();
-let incidentId = null;
-let investigationId = null;
+const db=firebase.firestore();
+let incidentId=null, investigationId=null;
 
-function showTab(id, el){
+function logAudit(type,id,action){
+  const user=firebase.auth().currentUser;
+  db.collection("auditLogs").add({
+    type,id,action,
+    user:user?.email||"unknown",
+    timestamp:firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+function printSection(id){
+  const c=document.getElementById(id).innerHTML;
+  const w=window.open("","PRINT");
+  w.document.write(`<html><body>${c}</body></html>`);
+  w.document.close();
+  w.print();
+}
+
+function showTab(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   ['active','closed','investigations'].forEach(x=>document.getElementById(x).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
 
-function openIncident(data=null){
+/* INCIDENTS */
+function openIncident(d=null){
   incidentModal.style.display='flex';
-  incidentId = data?.id || null;
-  iDate.value = data?.incidentDate || '';
-  iTeam.value = data?.team || '';
-  iArena.value = data?.arena || '';
-  iDescription.value = data?.description || '';
-  iNotes.value = data?.notes || '';
+  incidentId=d?.id||null;
+  iDate.value=d?.incidentDate||'';
+  iTeam.value=d?.team||'';
+  iArena.value=d?.arena||'';
+  iDescription.value=d?.description||'';
+  iNotes.value=d?.notes||'';
+  loadAudit("incident",incidentId,"incidentAudit");
 }
-
-function closeIncident(){
-  incidentModal.style.display='none';
-  incidentId=null;
-}
+function closeIncident(){incidentModal.style.display='none';}
 
 function saveIncident(){
-  const payload={
-    incidentDate:iDate.value,
-    team:iTeam.value,
-    arena:iArena.value,
-    description:iDescription.value,
-    notes:iNotes.value,
-    status:'open',
-    timestamp:firebase.firestore.FieldValue.serverTimestamp()
-  };
-  incidentId
-    ? db.collection('incidents').doc(incidentId).update(payload)
-    : db.collection('incidents').add(payload);
+  const data={incidentDate:iDate.value,team:iTeam.value,arena:iArena.value,description:iDescription.value,notes:iNotes.value,status:'open',timestamp:firebase.firestore.FieldValue.serverTimestamp()};
+  if(incidentId){
+    db.collection('incidents').doc(incidentId).update(data);
+    logAudit("incident",incidentId,"Updated incident");
+  }else{
+    db.collection('incidents').add(data).then(r=>{
+      incidentId=r.id;
+      logAudit("incident",incidentId,"Created incident");
+    });
+  }
   closeIncident();
 }
 
 function closeIncidentStatus(){
   db.collection('incidents').doc(incidentId).update({status:'closed'});
-  closeIncident();
-}
-
-function reopenIncident(){
-  db.collection('incidents').doc(incidentId).update({status:'open'});
+  logAudit("incident",incidentId,"Closed incident");
   closeIncident();
 }
 
 function deleteIncident(){
-  if(confirm('Delete this incident?')){
+  if(confirm("Delete incident?")){
     db.collection('incidents').doc(incidentId).delete();
+    logAudit("incident",incidentId,"Deleted incident");
     closeIncident();
   }
 }
 
 function sendToInvestigation(){
+  if(!confirm("Open as formal investigation?"))return;
   db.collection('incidents').doc(incidentId).get().then(d=>{
-    db.collection('investigations').add({...d.data(), status:'open'});
+    db.collection('investigations').add({...d.data(),status:'open'}).then(r=>{
+      logAudit("investigation",r.id,"Created from incident");
+    });
+  });
+}
+
+/* INVESTIGATIONS */
+function openInvestigation(d,id){
+  investigationId=id;
+  investigationModal.style.display='flex';
+  Object.keys(d).forEach(k=>{
+    const el=document.getElementById('v'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(el) el.value=d[k];
+  });
+  loadAudit("investigation",id,"investigationAudit");
+}
+function closeInvestigation(){investigationModal.style.display='none';}
+
+function saveInvestigation(){
+  const fields=['Date','Team','Arena','Description','Players','Coaches','Witnesses','InvestigatorNotes','InterviewNotes','WitnessStatements','Evidence','PriorIncidents','PriorPunishments','RecommendedOutcome','FinalOutcome'];
+  let data={};
+  fields.forEach(f=>data[f.charAt(0).toLowerCase()+f.slice(1)]=document.getElementById('v'+f).value);
+  db.collection('investigations').doc(investigationId).update(data);
+  logAudit("investigation",investigationId,"Updated investigation");
+}
+
+function closeInvestigationStatus(){
+  db.collection('investigations').doc(investigationId).update({status:'closed'});
+  logAudit("investigation",investigationId,"Closed investigation");
+  closeInvestigation();
+}
+
+/* LOADERS */
+function loadAudit(type,id,target){
+  if(!id)return;
+  db.collection("auditLogs").where("type","==",type).where("id","==",id).orderBy("timestamp","desc")
+  .onSnapshot(s=>{
+    document.getElementById(target).innerHTML="";
+    s.forEach(d=>{
+      const a=d.data();
+      document.getElementById(target).innerHTML+=
+      `<div class="audit">${a.action} — ${a.user}</div>`;
+    });
   });
 }
 
@@ -240,7 +253,8 @@ db.collection('investigations').onSnapshot(s=>{
     const d=doc.data();
     const c=document.createElement('div');
     c.className='card';
-    c.innerHTML=`<b>${d.team}</b><br>${d.description}`;
+    c.innerHTML=`<b>${d.team}</b><br>${d.description}<br>
+    <button onclick='openInvestigation(${JSON.stringify(d)}, "${doc.id}")'>Open Investigation</button>`;
     investigations.appendChild(c);
   });
 });
