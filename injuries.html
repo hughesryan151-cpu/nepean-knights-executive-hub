@@ -12,7 +12,49 @@
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
 <style>
-/* Same styling as before */
+:root {
+  --primary-color: #E41F26;
+  --secondary-color: #FFD200;
+  --accent-color: #000000;
+  --bg-color: #FFE680;
+  --card-bg: #FFF2CC;
+  --injured-color: #FF6B6B;
+  --cleared-color: #4CAF50;
+  --alert-color: #FF4500;
+  --summary-bg: #FFF8E1;
+}
+
+body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#FFD200,#E41F26); margin:0; }
+header { display:flex; align-items:center; justify-content:space-between; background-color:var(--primary-color); color:var(--secondary-color); padding:10px 20px; }
+header img.logo { height:50px; }
+header img.banner { height:50px; }
+header button { background-color:var(--secondary-color); color:var(--accent-color); border:none; padding:10px 15px; border-radius:6px; cursor:pointer; font-weight:bold; }
+header button:hover { opacity:0.9; }
+
+main { padding:20px; }
+.card { background-color: var(--card-bg); border-radius:10px; padding:20px; margin:20px auto; max-width:1250px; box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+input, textarea, select { width:100%; padding:10px; margin:8px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; }
+textarea { resize: vertical; }
+button { background-color:var(--secondary-color); color:var(--accent-color); padding:10px 15px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.2s; }
+button:hover { opacity:0.9; }
+h2 { color:var(--primary-color); text-align:center; }
+
+table { width:100%; border-collapse: collapse; margin-top:20px; font-size:14px; }
+th, td { border:1px solid #ccc; padding:10px; text-align:left; vertical-align:middle; }
+th { background-color:var(--secondary-color); color:var(--accent-color); }
+tr:nth-child(even) { background-color: #fff8dc; }
+.status-injured { background-color: var(--injured-color); color:#fff; font-weight:bold; text-align:center; }
+.status-cleared { background-color: var(--cleared-color); color:#fff; font-weight:bold; text-align:center; }
+.status-alert { background-color: var(--alert-color); color:#fff; font-weight:bold; text-align:center; animation: blink 1s infinite; }
+@keyframes blink { 0% { opacity:1; } 50% { opacity:0.3; } 100% { opacity:1; } }
+
+.filter-section { margin-top:20px; margin-bottom:10px; }
+.filter-section select { width:auto; display:inline-block; margin-right:10px; padding:5px 10px; border-radius:6px; border:1px solid #ccc; }
+
+.summary-cards { display:flex; justify-content:space-around; margin-top:20px; }
+.summary-card { flex:1; background-color:var(--summary-bg); padding:20px; margin:5px; border-radius:10px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.2); }
+.summary-card h3 { margin:5px 0; color:var(--primary-color); }
+.summary-card p { font-size:24px; font-weight:bold; }
 </style>
 </head>
 <body>
@@ -51,12 +93,23 @@
       <button onclick="saveInjury()"><i class="fas fa-save"></i> Save Injury</button>
     </section>
 
+    <!-- Summary Cards -->
     <div class="summary-cards">
-      <div class="summary-card" id="totalInjuriesCard"><h3>Total Injuries</h3><p>0</p></div>
-      <div class="summary-card" id="headInjuriesCard"><h3>Head Injuries</h3><p>0</p></div>
-      <div class="summary-card" id="clearedPlayersCard"><h3>Cleared Players</h3><p>0</p></div>
+      <div class="summary-card" id="totalInjuriesCard">
+        <h3>Total Injuries</h3>
+        <p>0</p>
+      </div>
+      <div class="summary-card" id="headInjuriesCard">
+        <h3>Head Injuries</h3>
+        <p>0</p>
+      </div>
+      <div class="summary-card" id="clearedPlayersCard">
+        <h3>Cleared Players</h3>
+        <p>0</p>
+      </div>
     </div>
 
+    <!-- Filters -->
     <div class="filter-section">
       <label>Filter Status:</label>
       <select id="statusFilter" onchange="loadInjuries()">
@@ -67,13 +120,24 @@
       </select>
     </div>
 
-    <h3>Injury Dashboard</h3>
+    <!-- Injury Table -->
+    <h3 style="margin-top:10px;">Injury Dashboard</h3>
     <table>
       <thead>
         <tr>
-          <th>Player</th><th>Team</th><th>Date</th><th>Description</th><th>Head Injury</th>
-          <th>Actions Taken</th><th>Return Date/Time</th><th>Doctor Notes</th><th>File</th>
-          <th>Status</th><th>Admin Override</th><th>Edit</th><th>Reported</th>
+          <th>Player</th>
+          <th>Team</th>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Head Injury</th>
+          <th>Actions Taken</th>
+          <th>Return Date/Time</th>
+          <th>Doctor Notes</th>
+          <th>File</th>
+          <th>Status</th>
+          <th>Admin Override</th>
+          <th>Edit</th>
+          <th>Reported</th>
         </tr>
       </thead>
       <tbody id="injuryList"></tbody>
@@ -101,6 +165,7 @@ const storage = firebase.storage();
 
 auth.onAuthStateChanged(user => { if(!user) window.location.href="index.html"; });
 function logout(){ auth.signOut().then(()=> window.location.href="index.html"); }
+
 function showForm(){ document.getElementById('injuryForm').style.display='block'; }
 
 async function uploadFile(file, playerName){
@@ -124,31 +189,27 @@ async function saveInjury(){
   const injuryId = document.getElementById('injuryId').value;
 
   if(!playerName || !teamName || !date || !description){
-    alert('Please fill all required fields'); return;
+    alert('Please fill all required fields');
+    return;
   }
 
   if(headInjury && !doctorNotes && returnDate && returnTime){
-    alert('For head injuries, doctor notes are required before return to play.'); return;
+    alert('For head injuries, doctor notes are required before return to play.');
+    return;
   }
 
   const fileUrl = await uploadFile(file, playerName);
 
-  // Determine resolved automatically
-  let resolved = false;
-  if(returnDate && returnTime){
-    const returnDT = new Date(returnDate+'T'+returnTime);
-    if(returnDT <= new Date()) resolved = true;
-  }
-
   const injuryData = {
     playerName, teamName, date, description, actions,
     headInjury, returnDate, returnTime, doctorNotes,
-    statusOverride: '', resolved,
+    statusOverride: '',
+    resolved: false,
     fileUrl: fileUrl || null,
     timestamp: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  if(injuryId){
+  if (injuryId) {
     await db.collection('injuries').doc(injuryId).update(injuryData);
     alert('Injury updated!');
   } else {
@@ -180,10 +241,11 @@ function editInjury(id){
 }
 
 function overrideStatus(docId, newStatus){
-  const resolved = newStatus === 'Cleared';
-  db.collection('injuries').doc(docId).update({statusOverride: newStatus, resolved}).then(()=> loadInjuries());
+  db.collection('injuries').doc(docId).update({statusOverride: newStatus})
+    .then(()=> loadInjuries());
 }
 
+// Fixed loadInjuries function
 function loadInjuries(){
   const tbody = document.getElementById('injuryList');
   const filter = document.getElementById('statusFilter').value;
@@ -196,33 +258,45 @@ function loadInjuries(){
   db.collection('injuries').orderBy('timestamp','desc').get().then(snapshot=>{
     snapshot.forEach(doc=>{
       const d = doc.data();
-      const returnDT = d.returnDate && d.returnTime ? new Date(d.returnDate+'T'+d.returnTime) : null;
+      const returnDateTime = d.returnDate && d.returnTime ? `${d.returnDate} ${d.returnTime}` : '';
+      const now = new Date();
       let statusClass = 'status-injured';
       let statusText = 'Injured';
 
-      if(d.statusOverride === 'Cleared' || (returnDT && returnDT <= new Date())){
+      const returnDT = d.returnDate && d.returnTime ? new Date(d.returnDate+'T'+d.returnTime) : null;
+      let resolved = d.resolved || false;
+      if(d.statusOverride === 'Cleared' || (returnDT && returnDT <= now)) resolved = true;
+
+      if(resolved) {
         statusClass = 'status-cleared';
-        statusText = d.statusOverride === 'Cleared' ? 'Cleared (Admin)' : 'Cleared';
-        if(!d.resolved) db.collection('injuries').doc(doc.id).update({resolved:true});
-      } else {
-        if(d.resolved) db.collection('injuries').doc(doc.id).update({resolved:false});
+        statusText = 'Cleared';
+      } else if(d.statusOverride === 'Injured'){
+        statusClass = 'status-injured';
+        statusText = 'Injured (Admin)';
+      } else if(d.headInjury && !d.doctorNotes){
+        statusClass = 'status-alert';
+        statusText = 'Head Injury - Doctor Notes Required';
       }
 
       totalInjuries++;
       if(d.headInjury) headInjuries++;
-      if(statusText.toLowerCase().includes('cleared')) clearedPlayers++;
+      if(resolved) clearedPlayers++;
 
-      if(filter === 'injured' && !statusText.toLowerCase().includes('injured')) return;
-      if(filter === 'cleared' && !statusText.toLowerCase().includes('cleared')) return;
+      if(filter === 'injured' && resolved) return;
+      if(filter === 'cleared' && !resolved) return;
       if(filter === 'headInjury' && !d.headInjury) return;
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${d.playerName}</td><td>${d.teamName}</td><td>${d.date}</td><td>${d.description}</td>
-        <td>${d.headInjury?'Yes':'No'}</td><td>${d.actions}</td>
-        <td>${d.returnDate&&d.returnTime?d.returnDate+' '+d.returnTime:''}</td>
-        <td>${d.doctorNotes||''}</td>
-        <td>${d.fileUrl?`<a href="${d.fileUrl}" target="_blank">View</a>`:''}</td>
+        <td>${d.playerName}</td>
+        <td>${d.teamName}</td>
+        <td>${d.date}</td>
+        <td>${d.description}</td>
+        <td>${d.headInjury ? 'Yes' : 'No'}</td>
+        <td>${d.actions}</td>
+        <td>${returnDateTime}</td>
+        <td>${d.doctorNotes || ''}</td>
+        <td>${d.fileUrl ? `<a href="${d.fileUrl}" target="_blank">View</a>` : ''}</td>
         <td class="${statusClass}">${statusText}</td>
         <td>
           <select onchange="overrideStatus('${doc.id}', this.value)">
@@ -232,7 +306,7 @@ function loadInjuries(){
           </select>
         </td>
         <td><button onclick="editInjury('${doc.id}')"><i class="fas fa-edit"></i> Edit</button></td>
-        <td>${d.timestamp?d.timestamp.toDate().toLocaleString():''}</td>
+        <td>${d.timestamp ? d.timestamp.toDate().toLocaleString() : ''}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -245,6 +319,6 @@ function loadInjuries(){
 
 loadInjuries();
 </script>
+
 </body>
 </html>
-
