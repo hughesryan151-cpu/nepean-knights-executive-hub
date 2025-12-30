@@ -112,6 +112,7 @@ button:hover{opacity:0.9;}
       <button type="button" onclick="cancelIncidentEdit()">Cancel</button>
       <button type="button" onclick="reopenIncident()">Reopen Incident</button>
       <button type="button" onclick="printIncident()">Print Incident</button>
+      <button type="button" onclick="sendToInvestigation()">Send to Investigation</button>
     </div>
   </div>
 </div>
@@ -122,20 +123,28 @@ button:hover{opacity:0.9;}
     <button class="back-dashboard-btn" onclick="backToDashboard('investigation')">← Back to Dashboard</button>
     <button class="modal-close-btn" onclick="closeInvestigationModal()">&times;</button>
     <h2>Investigation Details</h2>
+    
     <label>Notes</label>
-    <textarea id="investigationEditNotes" rows="3"></textarea>
+    <textarea id="investigationEditNotes" rows="8" style="height:120px;"></textarea>
+    
     <label>Timeline</label>
-    <textarea id="timeline" rows="2"></textarea>
+    <textarea id="timeline" rows="6" style="height:100px;"></textarea>
+    
     <label>Interviews</label>
-    <textarea id="interviews" rows="2"></textarea>
+    <textarea id="interviews" rows="6" style="height:100px;"></textarea>
+    
     <label>Expert Comments</label>
-    <textarea id="expertComments" rows="2"></textarea>
+    <textarea id="expertComments" rows="6" style="height:100px;"></textarea>
+    
     <label>Final Notes</label>
-    <textarea id="finalNotes" rows="2"></textarea>
+    <textarea id="finalNotes" rows="6" style="height:100px;"></textarea>
+    
     <label>Recommended Punishment</label>
     <input type="text" id="recommendedPunishment">
+    
     <label>Given Punishment</label>
     <input type="text" id="givenPunishment">
+    
     <div style="margin-top:10px;">
       <button onclick="saveInvestigation()">Save</button>
       <button onclick="cancelInvestigationEdit()">Cancel</button>
@@ -146,7 +155,7 @@ button:hover{opacity:0.9;}
 </div>
 
 <script>
-// ---------------- Firebase ----------------
+// ---------------- Firebase Config ----------------
 const firebaseConfig={apiKey:"AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",authDomain:"nepean-knights-executive-hub.firebaseapp.com",projectId:"nepean-knights-executive-hub",storageBucket:"nepean-knights-executive-hub.appspot.com",messagingSenderId:"103399385512",appId:"1:103399385512:web:bbd8ac65b5c8be5332159d"};
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(); const db=firebase.firestore(); const storage=firebase.storage();
@@ -186,8 +195,8 @@ function backToDashboard(type){
   applyFilters();
 }
 
-// ---------------- Full incident/investigation JS ----------------
-// (Include all functions from your previous full dashboard: loadIncidents, saveIncident, editIncident, closeIncident, reopenIncident, deleteIncident, loadInvestigations, saveInvestigation, editInvestigation, closeInvestigation, reopenInvestigation, deleteInvestigation, printIncident, printInvestigation, autoPopulateIncidentNumber)
+// ---------------- INCIDENT & INVESTIGATION FUNCTIONS ----------------
+// Include all functions for create/edit/close/reopen/send/print here (as in previous detailed answer)
 
 </script>
 </body>
