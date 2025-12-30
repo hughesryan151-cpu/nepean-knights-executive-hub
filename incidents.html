@@ -2,29 +2,114 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Incident & Investigation Dashboard</title>
+<title>Nepean Knights – Incident & Investigation Dashboard</title>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-html,body{margin:0;height:100%;font-family:Arial;background:#f2f3f5}
-header{background:#E41F26;color:#FFD200;padding:15px;display:flex;justify-content:space-between}
-.container{padding:20px}
-button{padding:8px 14px;border:none;border-radius:5px;font-weight:bold;cursor:pointer}
-.primary{background:#E41F26;color:#FFD200}
+/* ================== THEME ================== */
+:root{
+  --primary:#E41F26;
+  --secondary:#FFD200;
+  --dark:#222;
+  --bg:#f4f5f7;
+}
+*{box-sizing:border-box}
+
+/* ================== LAYOUT ================== */
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:var(--bg);
+  color:#000;
+}
+
+header{
+  background:var(--primary);
+  color:var(--secondary);
+  padding:15px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+button{
+  cursor:pointer;
+  border:none;
+  border-radius:5px;
+  padding:8px 14px;
+  font-weight:bold;
+}
+
+.primary{background:var(--primary);color:var(--secondary)}
 .secondary{background:#ddd}
-.tab{padding:10px 15px;background:#FFD200;margin-right:5px;border-radius:4px;cursor:pointer;display:inline-block}
-.tab.active{background:#E41F26;color:#FFD200}
-.card{background:#fff;padding:15px;margin-top:10px;border-radius:6px}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
-.modal-content{background:#fff;width:900px;max-height:90vh;overflow-y:auto;padding:20px;border-radius:8px}
-input,textarea{width:100%;padding:8px;margin-bottom:10px}
-textarea{min-height:120px}
-.section-title{font-weight:bold;margin-top:15px;border-bottom:1px solid #ccc}
-.audit{font-size:.85em;background:#f7f7f7;padding:8px;border-radius:4px;margin-top:10px}
+
+.container{padding:20px}
+
+.tabs{
+  margin-top:10px;
+}
+.tab{
+  display:inline-block;
+  padding:10px 15px;
+  margin-right:5px;
+  background:var(--secondary);
+  border-radius:5px;
+}
+.tab.active{
+  background:var(--primary);
+  color:var(--secondary);
+}
+
+.card{
+  background:#fff;
+  border-radius:6px;
+  padding:15px;
+  margin-top:12px;
+  box-shadow:0 2px 5px rgba(0,0,0,.1);
+}
+
 .hidden{display:none}
+
+/* ================== MODALS ================== */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+.modal-content{
+  background:#fff;
+  width:95%;
+  max-width:1000px;
+  max-height:92vh;
+  overflow-y:auto;
+  padding:20px;
+  border-radius:8px;
+}
+
+input,textarea{
+  width:100%;
+  padding:8px;
+  margin-bottom:10px;
+}
+textarea{min-height:120px}
+
+/* ================== SECTIONS ================== */
+.section{
+  margin-top:20px;
+}
+.section h3{
+  margin:0 0 10px;
+  padding-bottom:5px;
+  border-bottom:2px solid var(--primary);
+}
 </style>
 </head>
 
@@ -32,233 +117,246 @@ textarea{min-height:120px}
 
 <header>
   <h2>Incident & Investigation Dashboard</h2>
-  <button onclick="firebase.auth().signOut()">Logout</button>
+  <button onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
   <button class="primary" onclick="openIncident()">➕ Create Incident</button>
 
-  <div style="margin-top:15px">
-    <span class="tab active" onclick="showTab('active',this)">Active Incidents</span>
-    <span class="tab" onclick="showTab('closed',this)">Closed Incidents</span>
-    <span class="tab" onclick="showTab('investigations',this)">Investigations</span>
+  <div class="tabs">
+    <span class="tab active" id="tabIncidents" onclick="switchTab('incidents')">Incidents</span>
+    <span class="tab" id="tabInvestigations" onclick="switchTab('investigations')">Investigations</span>
   </div>
 
-  <div id="active"></div>
-  <div id="closed" class="hidden"></div>
-  <div id="investigations" class="hidden"></div>
+  <div id="incidentList"></div>
+  <div id="investigationList" class="hidden"></div>
 </div>
 
-<!-- INCIDENT MODAL -->
+<!-- ================= INCIDENT MODAL ================= -->
 <div class="modal" id="incidentModal">
-<div class="modal-content" id="incidentPrint">
-<button class="secondary" onclick="closeIncident()">← Back</button>
-<button class="secondary" onclick="printSection('incidentPrint')">Export PDF</button>
+<div class="modal-content">
+<button class="secondary" onclick="closeIncident()">← Back to Dashboard</button>
 
-<h3>Incident</h3>
-<input id="iDate" type="date">
-<input id="iTeam" placeholder="Team">
-<input id="iArena" placeholder="Arena">
-<textarea id="iDescription" placeholder="Incident Description"></textarea>
-<textarea id="iNotes" placeholder="Internal Notes"></textarea>
+<h2>Incident Report</h2>
 
-<button class="primary" onclick="saveIncident()">Save</button>
-<button onclick="closeIncidentStatus()">Close</button>
-<button onclick="deleteIncident()">Delete</button>
+<label>Date</label>
+<input type="date" id="iDate">
+
+<label>Team</label>
+<input id="iTeam">
+
+<label>Arena</label>
+<input id="iArena">
+
+<label>Incident Description</label>
+<textarea id="iDescription"></textarea>
+
+<label>Internal Notes</label>
+<textarea id="iNotes"></textarea>
+
+<button class="primary" onclick="saveIncident()">Save Incident</button>
 <button onclick="sendToInvestigation()">Send to Investigation</button>
-
-<div class="section-title">Audit Log</div>
-<div id="incidentAudit"></div>
 </div>
 </div>
 
-<!-- INVESTIGATION MODAL -->
+<!-- ================= INVESTIGATION MODAL ================= -->
 <div class="modal" id="investigationModal">
-<div class="modal-content" id="investigationPrint">
-<button class="secondary" onclick="closeInvestigation()">← Back</button>
-<button class="secondary" onclick="printSection('investigationPrint')">Export PDF</button>
+<div class="modal-content">
+<button class="secondary" onclick="closeInvestigation()">← Back to Dashboard</button>
 
-<h3>Formal Investigation</h3>
+<h2>Formal Investigation File</h2>
 
-<div class="section-title">Incident Info</div>
-<input id="vDate" type="date">
-<input id="vTeam">
-<input id="vArena">
-<textarea id="vDescription"></textarea>
+<div class="section">
+<h3>1. Incident Overview</h3>
+<input type="date" id="vDate">
+<input id="vTeam" placeholder="Team">
+<input id="vArena" placeholder="Arena">
+<textarea id="vDescription" placeholder="Incident summary"></textarea>
+</div>
 
-<div class="section-title">People Involved</div>
-<textarea id="vPlayers" placeholder="Players (Name, DOB)"></textarea>
-<textarea id="vCoaches" placeholder="Coaches (Name, DOB)"></textarea>
-<textarea id="vWitnesses" placeholder="Witnesses / Contact"></textarea>
+<div class="section">
+<h3>2. Individuals Involved</h3>
+<textarea id="vPlayers" placeholder="Players (Name, DOB, #)"></textarea>
+<textarea id="vCoaches" placeholder="Coaches / Staff (Name, Role, DOB)"></textarea>
+<textarea id="vWitnesses" placeholder="Witnesses (Name, Contact Info)"></textarea>
+</div>
 
-<div class="section-title">Investigation</div>
-<textarea id="vInvestigatorNotes"></textarea>
-<textarea id="vInterviewNotes"></textarea>
-<textarea id="vWitnessStatements"></textarea>
-<textarea id="vEvidence"></textarea>
+<div class="section">
+<h3>3. Evidence & Interviews</h3>
+<textarea id="vInvestigatorNotes" placeholder="Investigator notes"></textarea>
+<textarea id="vInterviewNotes" placeholder="Interview summaries"></textarea>
+<textarea id="vWitnessStatements" placeholder="Witness statements"></textarea>
+<textarea id="vEvidence" placeholder="Evidence (video, photos, reports)"></textarea>
+</div>
 
-<div class="section-title">History & Outcome</div>
-<textarea id="vPriorIncidents"></textarea>
-<textarea id="vPriorPunishments"></textarea>
-<textarea id="vRecommendedOutcome"></textarea>
-<textarea id="vFinalOutcome"></textarea>
+<div class="section">
+<h3>4. History & Findings</h3>
+<textarea id="vPriorIncidents" placeholder="Prior incidents"></textarea>
+<textarea id="vPriorPunishments" placeholder="Prior punishments"></textarea>
+<textarea id="vFindings" placeholder="Findings of fact"></textarea>
+</div>
+
+<div class="section">
+<h3>5. Outcome</h3>
+<textarea id="vRecommendedOutcome" placeholder="Recommended outcome"></textarea>
+<textarea id="vFinalOutcome" placeholder="Final decision"></textarea>
+</div>
 
 <button class="primary" onclick="saveInvestigation()">Save Investigation</button>
-<button onclick="closeInvestigationStatus()">Close Investigation</button>
-
-<div class="section-title">Audit Log</div>
-<div id="investigationAudit"></div>
 </div>
 </div>
 
 <script>
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey:"AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
   authDomain:"nepean-knights-executive-hub.firebaseapp.com",
   projectId:"nepean-knights-executive-hub"
 });
 
+const auth=firebase.auth();
 const db=firebase.firestore();
-let incidentId=null, investigationId=null;
 
-function logAudit(type,id,action){
-  const user=firebase.auth().currentUser;
-  db.collection("auditLogs").add({
-    type,id,action,
-    user:user?.email||"unknown",
-    timestamp:firebase.firestore.FieldValue.serverTimestamp()
-  });
+let incidentId=null;
+let investigationId=null;
+
+/* ================= AUTH ================= */
+auth.onAuthStateChanged(u=>{
+  if(!u) window.location.href="index.html";
+});
+function logout(){auth.signOut()}
+
+/* ================= TABS ================= */
+function switchTab(tab){
+  tabIncidents.classList.toggle('active',tab==='incidents');
+  tabInvestigations.classList.toggle('active',tab==='investigations');
+  incidentList.classList.toggle('hidden',tab!=='incidents');
+  investigationList.classList.toggle('hidden',tab!=='investigations');
 }
 
-function printSection(id){
-  const c=document.getElementById(id).innerHTML;
-  const w=window.open("","PRINT");
-  w.document.write(`<html><body>${c}</body></html>`);
-  w.document.close();
-  w.print();
-}
-
-function showTab(id,el){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  ['active','closed','investigations'].forEach(x=>document.getElementById(x).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-}
-
-/* INCIDENTS */
-function openIncident(d=null){
+/* ================= INCIDENTS ================= */
+function openIncident(data=null){
   incidentModal.style.display='flex';
-  incidentId=d?.id||null;
-  iDate.value=d?.incidentDate||'';
-  iTeam.value=d?.team||'';
-  iArena.value=d?.arena||'';
-  iDescription.value=d?.description||'';
-  iNotes.value=d?.notes||'';
-  loadAudit("incident",incidentId,"incidentAudit");
+  incidentId=data?.id||null;
+  iDate.value=data?.incidentDate||'';
+  iTeam.value=data?.team||'';
+  iArena.value=data?.arena||'';
+  iDescription.value=data?.description||'';
+  iNotes.value=data?.notes||'';
 }
-function closeIncident(){incidentModal.style.display='none';}
+function closeIncident(){incidentModal.style.display='none'}
 
 function saveIncident(){
-  const data={incidentDate:iDate.value,team:iTeam.value,arena:iArena.value,description:iDescription.value,notes:iNotes.value,status:'open',timestamp:firebase.firestore.FieldValue.serverTimestamp()};
+  const data={
+    incidentDate:iDate.value,
+    team:iTeam.value,
+    arena:iArena.value,
+    description:iDescription.value,
+    notes:iNotes.value,
+    timestamp:firebase.firestore.FieldValue.serverTimestamp()
+  };
   if(incidentId){
     db.collection('incidents').doc(incidentId).update(data);
-    logAudit("incident",incidentId,"Updated incident");
   }else{
-    db.collection('incidents').add(data).then(r=>{
-      incidentId=r.id;
-      logAudit("incident",incidentId,"Created incident");
-    });
+    db.collection('incidents').add(data);
   }
   closeIncident();
-}
-
-function closeIncidentStatus(){
-  db.collection('incidents').doc(incidentId).update({status:'closed'});
-  logAudit("incident",incidentId,"Closed incident");
-  closeIncident();
-}
-
-function deleteIncident(){
-  if(confirm("Delete incident?")){
-    db.collection('incidents').doc(incidentId).delete();
-    logAudit("incident",incidentId,"Deleted incident");
-    closeIncident();
-  }
 }
 
 function sendToInvestigation(){
-  if(!confirm("Open as formal investigation?"))return;
-  db.collection('incidents').doc(incidentId).get().then(d=>{
-    db.collection('investigations').add({...d.data(),status:'open'}).then(r=>{
-      logAudit("investigation",r.id,"Created from incident");
+  if(!incidentId){alert("Save the incident first.");return}
+  if(!confirm("Create a formal investigation?"))return;
+
+  db.collection('incidents').doc(incidentId).get().then(doc=>{
+    const d=doc.data();
+    db.collection('investigations').add({
+      incidentDate:d.incidentDate,
+      team:d.team,
+      arena:d.arena,
+      description:d.description,
+      players:'',coaches:'',witnesses:'',
+      investigatorNotes:'',interviewNotes:'',
+      witnessStatements:'',evidence:'',
+      priorIncidents:'',priorPunishments:'',
+      findings:'',
+      recommendedOutcome:'',finalOutcome:'',
+      status:'open',
+      timestamp:firebase.firestore.FieldValue.serverTimestamp()
     });
+    alert("Investigation created.");
   });
+  closeIncident();
 }
 
-/* INVESTIGATIONS */
+/* ================= INVESTIGATIONS ================= */
 function openInvestigation(d,id){
   investigationId=id;
   investigationModal.style.display='flex';
-  Object.keys(d).forEach(k=>{
-    const el=document.getElementById('v'+k.charAt(0).toUpperCase()+k.slice(1));
-    if(el) el.value=d[k];
-  });
-  loadAudit("investigation",id,"investigationAudit");
+  vDate.value=d.incidentDate||'';
+  vTeam.value=d.team||'';
+  vArena.value=d.arena||'';
+  vDescription.value=d.description||'';
+  vPlayers.value=d.players||'';
+  vCoaches.value=d.coaches||'';
+  vWitnesses.value=d.witnesses||'';
+  vInvestigatorNotes.value=d.investigatorNotes||'';
+  vInterviewNotes.value=d.interviewNotes||'';
+  vWitnessStatements.value=d.witnessStatements||'';
+  vEvidence.value=d.evidence||'';
+  vPriorIncidents.value=d.priorIncidents||'';
+  vPriorPunishments.value=d.priorPunishments||'';
+  vFindings.value=d.findings||'';
+  vRecommendedOutcome.value=d.recommendedOutcome||'';
+  vFinalOutcome.value=d.finalOutcome||'';
 }
-function closeInvestigation(){investigationModal.style.display='none';}
+function closeInvestigation(){investigationModal.style.display='none'}
 
 function saveInvestigation(){
-  const fields=['Date','Team','Arena','Description','Players','Coaches','Witnesses','InvestigatorNotes','InterviewNotes','WitnessStatements','Evidence','PriorIncidents','PriorPunishments','RecommendedOutcome','FinalOutcome'];
-  let data={};
-  fields.forEach(f=>data[f.charAt(0).toLowerCase()+f.slice(1)]=document.getElementById('v'+f).value);
-  db.collection('investigations').doc(investigationId).update(data);
-  logAudit("investigation",investigationId,"Updated investigation");
-}
-
-function closeInvestigationStatus(){
-  db.collection('investigations').doc(investigationId).update({status:'closed'});
-  logAudit("investigation",investigationId,"Closed investigation");
+  db.collection('investigations').doc(investigationId).update({
+    players:vPlayers.value,
+    coaches:vCoaches.value,
+    witnesses:vWitnesses.value,
+    investigatorNotes:vInvestigatorNotes.value,
+    interviewNotes:vInterviewNotes.value,
+    witnessStatements:vWitnessStatements.value,
+    evidence:vEvidence.value,
+    priorIncidents:vPriorIncidents.value,
+    priorPunishments:vPriorPunishments.value,
+    findings:vFindings.value,
+    recommendedOutcome:vRecommendedOutcome.value,
+    finalOutcome:vFinalOutcome.value
+  });
   closeInvestigation();
 }
 
-/* LOADERS */
-function loadAudit(type,id,target){
-  if(!id)return;
-  db.collection("auditLogs").where("type","==",type).where("id","==",id).orderBy("timestamp","desc")
-  .onSnapshot(s=>{
-    document.getElementById(target).innerHTML="";
-    s.forEach(d=>{
-      const a=d.data();
-      document.getElementById(target).innerHTML+=
-      `<div class="audit">${a.action} — ${a.user}</div>`;
-    });
-  });
-}
-
-db.collection('incidents').onSnapshot(s=>{
-  active.innerHTML=''; closed.innerHTML='';
+/* ================= LOAD DATA ================= */
+db.collection('incidents').orderBy('timestamp','desc').onSnapshot(s=>{
+  incidentList.innerHTML='';
   s.forEach(doc=>{
     const d=doc.data();
-    const c=document.createElement('div');
-    c.className='card';
-    c.innerHTML=`<b>${d.team}</b><br>${d.description}<br>
-    <button onclick='openIncident(${JSON.stringify({...d,id:doc.id})})'>Open</button>`;
-    (d.status==='closed'?closed:active).appendChild(c);
+    incidentList.innerHTML+=`
+      <div class="card">
+        <b>${d.team||'Incident'}</b><br>
+        ${d.description||''}<br>
+        <button onclick='openIncident(${JSON.stringify({...d,id:doc.id})})'>Open</button>
+      </div>`;
   });
 });
 
-db.collection('investigations').onSnapshot(s=>{
-  investigations.innerHTML='';
+db.collection('investigations').orderBy('timestamp','desc').onSnapshot(s=>{
+  investigationList.innerHTML='';
   s.forEach(doc=>{
     const d=doc.data();
-    const c=document.createElement('div');
-    c.className='card';
-    c.innerHTML=`<b>${d.team}</b><br>${d.description}<br>
-    <button onclick='openInvestigation(${JSON.stringify(d)}, "${doc.id}")'>Open Investigation</button>`;
-    investigations.appendChild(c);
+    investigationList.innerHTML+=`
+      <div class="card">
+        <b>${d.team||'Investigation'}</b><br>
+        ${d.description||''}<br>
+        <button onclick='openInvestigation(${JSON.stringify(d)},"${doc.id}")'>Open Investigation</button>
+      </div>`;
   });
 });
 </script>
+
 </body>
 </html>
 
