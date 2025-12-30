@@ -9,37 +9,33 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 <style>
-:root {
-  --primary-color: #E41F26;
-  --secondary-color: #FFD200;
-  --accent-color: #000;
-  --card-bg: #FFF2CC;
-}
-body {margin:0; font-family: Arial,sans-serif; background: linear-gradient(135deg,#FFD200,#E41F26); color: var(--accent-color);}
-header {display:flex; justify-content:space-between; align-items:center; background:var(--primary-color); color: var(--secondary-color); padding:10px 20px;}
-header img {height:50px;}
-header button {background: var(--secondary-color); color: var(--accent-color); border:none; padding:10px 15px; border-radius:6px; cursor:pointer; font-weight:bold;}
-header button:hover {opacity:0.9;}
-.tabs {display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;}
-.tab {padding:10px 15px; background:var(--secondary-color); color:var(--accent-color); border-radius:6px; cursor:pointer; font-weight:bold;}
-.tab.active {background:var(--primary-color); color:var(--secondary-color);}
-.filter-container {margin-bottom:10px; display:flex; gap:10px; flex-wrap:wrap;}
-.card {background: var(--card-bg); border-radius:10px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
-.card-header {display:flex; justify-content:space-between; align-items:center; font-weight:bold;}
-.card-actions button {margin-right:5px; font-size:0.9rem; margin-top:5px;}
-.modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:999; overflow-y:auto; padding:20px;}
-.modal-content {background: var(--card-bg); border-radius:10px; padding:20px; width:100%; max-width:700px; position:relative; max-height:90vh; overflow-y:auto;}
-.modal-close-btn {position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--primary-color);}
-input,textarea,select {width:100%; padding:10px; margin:8px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;}
-textarea {resize:vertical;}
-button {background: var(--secondary-color); color: var(--accent-color); padding:10px 15px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px;}
-button:hover {opacity:0.9;}
-.attachment-list a {display:block; margin-top:5px;}
-#suspensionFields {margin-top:10px;}
-.closed-label {color:red; font-weight:bold;}
+:root { --primary-color:#E41F26; --secondary-color:#FFD200; --accent-color:#000; --card-bg:#FFF2CC; }
+body{margin:0; font-family:Arial,sans-serif; background:linear-gradient(135deg,#FFD200,#E41F26); color:var(--accent-color);}
+header{display:flex; justify-content:space-between; align-items:center; background:var(--primary-color); color:var(--secondary-color); padding:10px 20px;}
+header img{height:50px;}
+header button{background:var(--secondary-color); color:var(--accent-color); border:none; padding:10px 15px; border-radius:6px; cursor:pointer; font-weight:bold;}
+header button:hover{opacity:0.9;}
+.tabs{display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;}
+.tab{padding:10px 15px; background:var(--secondary-color); color:var(--accent-color); border-radius:6px; cursor:pointer; font-weight:bold;}
+.tab.active{background:var(--primary-color); color:var(--secondary-color);}
+.filter-container{margin-bottom:10px; display:flex; gap:10px; flex-wrap:wrap;}
+.card{background: var(--card-bg); border-radius:10px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
+.card-header{display:flex; justify-content:space-between; align-items:center; font-weight:bold;}
+.card-actions button{margin-right:5px; font-size:0.9rem; margin-top:5px;}
+.modal{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:999; overflow-y:auto; padding:20px;}
+.modal-content{background: var(--card-bg); border-radius:10px; padding:20px; width:100%; max-width:700px; position:relative; max-height:90vh; overflow-y:auto;}
+.modal-close-btn{position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--primary-color);}
+input,textarea,select{width:100%; padding:10px; margin:8px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;}
+textarea{resize:vertical;}
+button{background: var(--secondary-color); color: var(--accent-color); padding:10px 15px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px;}
+button:hover{opacity:0.9;}
+.attachment-list a{display:block; margin-top:5px;}
+#suspensionFields{margin-top:10px;}
+.closed-label{color:red; font-weight:bold;}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
-@media(max-width:900px){.tabs{flex-direction:column;}}
+.back-dashboard-btn{background:#E41F26;color:#FFD200;padding:8px 12px;margin-bottom:10px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;}
+.back-dashboard-btn:hover{opacity:0.9;}
 </style>
 </head>
 <body>
@@ -79,7 +75,7 @@ button:hover {opacity:0.9;}
 <!-- Incident Modal -->
 <div class="modal" id="incidentModal">
   <div class="modal-content">
-    <button onclick="backToDashboard('incident')" style="background-color:#E41F26;color:#FFD200;margin-bottom:10px;">← Back to Dashboard</button>
+    <button class="back-dashboard-btn" onclick="backToDashboard('incident')">← Back to Dashboard</button>
     <button class="modal-close-btn" onclick="closeIncidentModal()">&times;</button>
     <h2 id="modalTitle">Incident Details</h2>
     <label>Incident Number</label>
@@ -123,7 +119,7 @@ button:hover {opacity:0.9;}
 <!-- Investigation Modal -->
 <div class="modal" id="investigationModal">
   <div class="modal-content">
-    <button onclick="backToDashboard('investigation')" style="background-color:#E41F26;color:#FFD200;margin-bottom:10px;">← Back to Dashboard</button>
+    <button class="back-dashboard-btn" onclick="backToDashboard('investigation')">← Back to Dashboard</button>
     <button class="modal-close-btn" onclick="closeInvestigationModal()">&times;</button>
     <h2>Investigation Details</h2>
     <label>Notes</label>
@@ -150,34 +146,36 @@ button:hover {opacity:0.9;}
 </div>
 
 <script>
-// ---------- Firebase ----------
+// ---------------- Firebase ----------------
 const firebaseConfig={apiKey:"AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",authDomain:"nepean-knights-executive-hub.firebaseapp.com",projectId:"nepean-knights-executive-hub",storageBucket:"nepean-knights-executive-hub.appspot.com",messagingSenderId:"103399385512",appId:"1:103399385512:web:bbd8ac65b5c8be5332159d"};
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(); const db=firebase.firestore(); const storage=firebase.storage();
 let editingIncidentId=null; let editingInvestigationId=null;
 
-// ---------- Auth ----------
+// ---------------- Auth ----------------
 auth.onAuthStateChanged(user=>{if(!user)window.location.href="index.html";});
 function logout(){auth.signOut().then(()=>window.location.href="index.html");}
 
-// ---------- Tabs ----------
-document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',()=>{
-document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-tab.classList.add('active');
-document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-document.getElementById(tab.dataset.tab).classList.add('active');
-applyFilters();
-});});
-
-// ---------- Filters ----------
-function applyFilters(){
-const filter=document.getElementById('searchFilter').value.toLowerCase();
-document.querySelectorAll('.tab-content.active .card').forEach(card=>{
-card.style.display=card.textContent.toLowerCase().includes(filter)?'':'none';
+// ---------------- Tabs ----------------
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    document.getElementById(tab.dataset.tab).classList.add('active');
+    applyFilters();
+  });
 });
+
+// ---------------- Filters ----------------
+function applyFilters(){
+  const filter=document.getElementById('searchFilter').value.toLowerCase();
+  document.querySelectorAll('.tab-content.active .card').forEach(card=>{
+    card.style.display=card.textContent.toLowerCase().includes(filter)?'':'none';
+  });
 }
 
-// ---------- Back to Dashboard ----------
+// ---------------- Back to Dashboard ----------------
 function backToDashboard(type){
   if(type==='incident'){editingIncidentId=null; closeIncidentModal();}
   if(type==='investigation'){editingInvestigationId=null; closeInvestigationModal();}
@@ -188,13 +186,9 @@ function backToDashboard(type){
   applyFilters();
 }
 
-// ---------- Full JS Functions ----------
-// This includes all previously provided JS for save/edit/close/reopen/delete/print for incidents and investigations
-// (Paste the JS from my previous long message here to have a fully functional dashboard)
+// ---------------- Full incident/investigation JS ----------------
+// (Include all functions from your previous full dashboard: loadIncidents, saveIncident, editIncident, closeIncident, reopenIncident, deleteIncident, loadInvestigations, saveInvestigation, editInvestigation, closeInvestigation, reopenInvestigation, deleteInvestigation, printIncident, printInvestigation, autoPopulateIncidentNumber)
 
-autoPopulateIncidentNumber();
-loadIncidents();
-loadInvestigations();
 </script>
 </body>
 </html>
