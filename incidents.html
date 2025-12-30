@@ -24,13 +24,11 @@ header button:hover {opacity:0.9;}
 .tab {padding:10px 15px; background:var(--secondary-color); color:var(--accent-color); border-radius:6px; cursor:pointer; font-weight:bold;}
 .tab.active {background:var(--primary-color); color:var(--secondary-color);}
 .filter-container {margin-bottom:10px; display:flex; gap:10px; flex-wrap:wrap;}
-.card {background: var(--card-bg); border-radius:10px; padding:20px; margin-bottom:20px; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
-.card-header {display:flex; justify-content:space-between; align-items:center; cursor:pointer;}
-.card-body {display:none; margin-top:10px;}
-.card-body.show {display:block;}
-.incident-actions button {margin-right:5px; font-size:0.9rem; margin-top:5px;}
+.card {background: var(--card-bg); border-radius:10px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
+.card-header {display:flex; justify-content:space-between; align-items:center; font-weight:bold;}
+.card-actions button {margin-right:5px; font-size:0.9rem; margin-top:5px;}
 .modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:999; overflow-y:auto; padding:20px;}
-.modal-content {background: var(--card-bg); border-radius:10px; padding:20px; width:100%; max-width:650px; position:relative;}
+.modal-content {background: var(--card-bg); border-radius:10px; padding:20px; width:100%; max-width:700px; position:relative; max-height:90vh; overflow-y:auto;}
 .modal-close-btn {position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--primary-color);}
 input,textarea,select {width:100%; padding:10px; margin:8px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;}
 textarea {resize:vertical;}
@@ -81,8 +79,9 @@ button:hover {opacity:0.9;}
 <!-- Incident Modal -->
 <div class="modal" id="incidentModal">
   <div class="modal-content">
+    <button onclick="closeIncidentModal()" style="background-color:#E41F26;color:#FFD200;margin-bottom:10px;">← Back</button>
     <button class="modal-close-btn" onclick="closeIncidentModal()">&times;</button>
-    <h2 id="modalTitle">Create Incident</h2>
+    <h2 id="modalTitle">Incident Details</h2>
     <label>Incident Number</label>
     <input type="text" id="incidentNumber" disabled>
     <label>Date</label>
@@ -95,10 +94,10 @@ button:hover {opacity:0.9;}
     <input type="text" id="players">
     <label>Coaches (comma-separated)</label>
     <input type="text" id="coaches">
-    <label>Description</label>
-    <textarea id="description" required></textarea>
+    <label>Description / Notes</label>
+    <textarea id="description" rows="5" required></textarea>
     <label>Actions Taken</label>
-    <textarea id="actionsTaken"></textarea>
+    <textarea id="actionsTaken" rows="3"></textarea>
     <label>Punishment</label>
     <input type="text" id="punishment">
     <div id="suspensionFields" style="display:none;">
@@ -108,19 +107,25 @@ button:hover {opacity:0.9;}
       <input type="date" id="suspensionEnd">
     </div>
     <label>Attachments</label>
+    <div class="attachment-list" id="attachmentList"></div>
     <input type="file" id="attachment" multiple>
     <label>Investigation Notes</label>
     <textarea id="investigationNotes" rows="5"></textarea>
-    <button type="button" id="saveBtn" onclick="saveIncident()">Save Incident</button>
-    <button type="button" onclick="cancelIncidentEdit()">Cancel</button>
+    <div style="margin-top:10px;">
+      <button type="button" id="saveBtn" onclick="saveIncident()">Save Incident</button>
+      <button type="button" onclick="cancelIncidentEdit()">Cancel</button>
+      <button type="button" onclick="reopenIncident()">Reopen Incident</button>
+      <button type="button" onclick="printIncident()">Print Incident</button>
+    </div>
   </div>
 </div>
 
 <!-- Investigation Modal -->
 <div class="modal" id="investigationModal">
   <div class="modal-content">
+    <button onclick="closeInvestigationModal()" style="background-color:#E41F26;color:#FFD200;margin-bottom:10px;">← Back</button>
     <button class="modal-close-btn" onclick="closeInvestigationModal()">&times;</button>
-    <h2>Investigation Notes</h2>
+    <h2>Investigation Details</h2>
     <label>Notes</label>
     <textarea id="investigationEditNotes" rows="3"></textarea>
     <label>Timeline</label>
@@ -135,13 +140,17 @@ button:hover {opacity:0.9;}
     <input type="text" id="recommendedPunishment">
     <label>Given Punishment</label>
     <input type="text" id="givenPunishment">
-    <button onclick="saveInvestigation()">Save</button>
-    <button onclick="cancelInvestigationEdit()">Cancel</button>
+    <div style="margin-top:10px;">
+      <button onclick="saveInvestigation()">Save</button>
+      <button onclick="cancelInvestigationEdit()">Cancel</button>
+      <button onclick="reopenInvestigation()">Reopen Investigation</button>
+      <button onclick="printInvestigation()">Print Investigation</button>
+    </div>
   </div>
 </div>
 
 <script>
-// Firebase
+// --- Firebase Initialization ---
 const firebaseConfig = {
   apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
   authDomain: "nepean-knights-executive-hub.firebaseapp.com",
@@ -158,6 +167,7 @@ const storage = firebase.storage();
 let editingIncidentId = null;
 let editingInvestigationId = null;
 
+// Auth
 auth.onAuthStateChanged(user => { if(!user) window.location.href="index.html"; });
 function logout(){ auth.signOut().then(()=>window.location.href="index.html"); }
 
@@ -172,229 +182,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
   });
 });
 
-// Suspension fields
-document.getElementById('punishment').addEventListener('input', function(){
-  document.getElementById('suspensionFields').style.display=this.value.toLowerCase().includes('suspension')?'block':'none';
-});
-
-// --- INCIDENT FUNCTIONS ---
-function openIncidentModal(){
-  document.getElementById('incidentModal').style.display='flex';
-  document.getElementById('modalTitle').innerText=editingIncidentId?'Edit Incident':'Create Incident';
-  if(!editingIncidentId){
-    document.querySelectorAll('#incidentModal input,#incidentModal textarea').forEach(i=>i.value='');
-    autoPopulateIncidentNumber();
-  }
-}
-function closeIncidentModal(){document.getElementById('incidentModal').style.display='none';}
-function cancelIncidentEdit(){editingIncidentId=null; closeIncidentModal();}
-
-async function autoPopulateIncidentNumber(){
-  const now=new Date();
-  const yy=String(now.getFullYear()).slice(-2);
-  const mm=String(now.getMonth()+1).padStart(2,'0');
-  const snap = await db.collection("incidents")
-    .orderBy("incidentNumber","desc").limit(1).get();
-  let nextNum="001";
-  if(!snap.empty){
-    const lastNum = snap.docs[0].data().incidentNumber.split("-")[2];
-    nextNum=String(parseInt(lastNum)+1).padStart(3,'0');
-  }
-  document.getElementById('incidentNumber').value=`${yy}-${mm}-${nextNum}`;
-}
-
-// Save Incident
-async function saveIncident(){
-  const incidentNumber=document.getElementById('incidentNumber').value;
-  const incidentDate=document.getElementById('incidentDate').value;
-  const team=document.getElementById('team').value.trim();
-  const arena=document.getElementById('arena').value.trim();
-  const players=document.getElementById('players').value.split(',').map(p=>p.trim()).filter(p=>p);
-  const coaches=document.getElementById('coaches').value.split(',').map(c=>c.trim()).filter(c=>c);
-  const description=document.getElementById('description').value.trim();
-  const actionsTaken=document.getElementById('actionsTaken').value.trim();
-  const punishment=document.getElementById('punishment').value.trim();
-  const suspensionStart=document.getElementById('suspensionStart').value;
-  const suspensionEnd=document.getElementById('suspensionEnd').value;
-  const investigationNotes=document.getElementById('investigationNotes').value.trim();
-  const files=document.getElementById('attachment').files;
-  if(!incidentDate||!team||!arena||!description){alert("Fill required fields"); return;}
-  const data={incidentNumber,incidentDate,team,arena,players,coaches,description,actionsTaken,punishment,investigationNotes,status:'open',timestamp:firebase.firestore.FieldValue.serverTimestamp()};
-  if(files.length>0){
-    const urls=[];
-    for(let f of files){
-      const ref=storage.ref().child(`attachments/${incidentNumber}/${f.name}`);
-      await ref.put(f);
-      urls.push({name:f.name,url:await ref.getDownloadURL()});
-    }
-    data.attachments=urls;
-  }
-  if(editingIncidentId){
-    await db.collection('incidents').doc(editingIncidentId).update(data);
-    alert("Incident updated!");
-  } else {
-    await db.collection('incidents').add(data);
-    alert("Incident saved!");
-  }
-  editingIncidentId=null;
-  closeIncidentModal();
-  loadAllIncidents();
-}
-
-// Load all incidents into appropriate tabs
-async function loadAllIncidents(){
-  const activeContainer=document.getElementById('active-incidents');
-  const closedContainer=document.getElementById('closed-incidents');
-  activeContainer.innerHTML="Loading...";
-  closedContainer.innerHTML="Loading...";
-  const snap=await db.collection('incidents').orderBy('timestamp','desc').get();
-  activeContainer.innerHTML="";
-  closedContainer.innerHTML="";
-  snap.forEach(doc=>{
-    const d=doc.data();
-    const div=document.createElement('div');
-    div.className='card';
-    div.dataset.status=d.status;
-    div.innerHTML=`<div class="card-header"><strong>${d.incidentNumber}</strong> | ${d.incidentDate} | Team: ${d.team} ${d.status==='closed'?'<span class="closed-label">[CLOSED]</span>':''}</div>
-    <div class="card-body">
-      Arena: ${d.arena}<br>
-      Players: ${d.players?.join(',')||'N/A'}<br>
-      Coaches: ${d.coaches?.join(',')||'N/A'}<br>
-      ${d.description}<br>
-      Actions: ${d.actionsTaken}<br>
-      Punishment: ${d.punishment||'None'}<br>
-      <div class="attachment-list">${d.attachments?.map(a=>`<a href="${a.url}" target="_blank">${a.name}</a>`).join('')||''}</div>
-      Investigation Notes: ${d.investigationNotes||'None'}<br>
-      <div class="incident-actions">
-        <button onclick="editIncident('${doc.id}')">Edit</button>
-        <button onclick="sendToInvestigation('${doc.id}')">Send to Investigation</button>
-        ${d.status!=='closed'?`<button onclick="closeIncident('${doc.id}')">Close</button>`:''}
-        <button onclick="deleteIncident('${doc.id}')">Delete</button>
-        <button onclick="printIncident('${doc.id}')">Print</button>
-      </div>
-    </div>`;
-    if(d.status==='open') activeContainer.appendChild(div);
-    else closedContainer.appendChild(div);
-  });
-}
-
-// Edit/Close/Delete/Send
-async function editIncident(id){
-  editingIncidentId=id;
-  const doc=await db.collection('incidents').doc(id).get();
-  const d=doc.data();
-  document.getElementById('modalTitle').innerText='Edit Incident';
-  openIncidentModal();
-  document.getElementById('incidentNumber').value=d.incidentNumber;
-  document.getElementById('incidentDate').value=d.incidentDate;
-  document.getElementById('team').value=d.team;
-  document.getElementById('arena').value=d.arena;
-  document.getElementById('players').value=d.players?.join(',')||'';
-  document.getElementById('coaches').value=d.coaches?.join(',')||'';
-  document.getElementById('description').value=d.description;
-  document.getElementById('actionsTaken').value=d.actionsTaken;
-  document.getElementById('punishment').value=d.punishment||'';
-  document.getElementById('investigationNotes').value=d.investigationNotes||'';
-  document.getElementById('suspensionFields').style.display=d.punishment?.toLowerCase().includes('suspension')?'block':'none';
-}
-async function closeIncident(id){if(!confirm("Close this incident?")) return; await db.collection('incidents').doc(id).update({status:'closed'}); loadAllIncidents();}
-async function deleteIncident(id){if(!confirm("Delete this incident?")) return; await db.collection('incidents').doc(id).delete(); loadAllIncidents();}
-async function sendToInvestigation(id){
-  const doc=await db.collection('incidents').doc(id).get();
-  const data=doc.data();
-  await db.collection('investigations').add({...data, incidentId:id, status:'open', timestamp:firebase.firestore.FieldValue.serverTimestamp()});
-  alert("Sent to investigation!");
-  loadAllInvestigations();
-}
-function printIncident(id){
-  db.collection('incidents').doc(id).get().then(doc=>{
-    const d=doc.data();
-    const win=window.open('','_blank');
-    win.document.write(`<h2>Incident ${d.incidentNumber}</h2><p>Date: ${d.incidentDate}</p><p>Team: ${d.team}</p><p>Arena: ${d.arena}</p><p>Description: ${d.description}</p><p>Actions: ${d.actionsTaken}</p><p>Punishment: ${d.punishment||'None'}</p><p>Investigation Notes: ${d.investigationNotes||'None'}</p>`);
-    win.print();
-  });
-}
-
-// --- INVESTIGATION FUNCTIONS ---
-async function loadAllInvestigations(){
-  const activeContainer=document.getElementById('active-investigations');
-  const closedContainer=document.getElementById('closed-investigations');
-  activeContainer.innerHTML="Loading...";
-  closedContainer.innerHTML="Loading...";
-  const snap=await db.collection('investigations').orderBy('timestamp','desc').get();
-  activeContainer.innerHTML="";
-  closedContainer.innerHTML="";
-  snap.forEach(doc=>{
-    const d=doc.data();
-    const div=document.createElement('div');
-    div.className='card';
-    div.dataset.status=d.status;
-    div.innerHTML=`<div class="card-header"><strong>Incident: ${d.incidentNumber}</strong> | Team: ${d.team} ${d.status==='closed'?'<span class="closed-label">[CLOSED]</span>':''}</div>
-    <div class="card-body">
-      Investigation Notes: ${d.investigationNotes||'None'}<br>
-      Timeline: ${d.timeline||'None'}<br>
-      Interviews: ${d.interviews||'None'}<br>
-      Expert Comments: ${d.expertComments||'None'}<br>
-      Final Notes: ${d.finalNotes||'None'}<br>
-      Recommended Punishment: ${d.recommendedPunishment||'None'}<br>
-      Given Punishment: ${d.givenPunishment||'None'}<br>
-      <div class="incident-actions">
-        <button onclick="editInvestigation('${doc.id}')">Edit Notes</button>
-        ${d.status!=='closed'?`<button onclick="closeInvestigation('${doc.id}')">Close</button>`:''}
-        <button onclick="deleteInvestigation('${doc.id}')">Delete</button>
-        <button onclick="printInvestigation('${doc.id}')">Print</button>
-      </div>
-    </div>`;
-    if(d.status==='open') activeContainer.appendChild(div);
-    else closedContainer.appendChild(div);
-  });
-}
-function editInvestigation(id){
-  editingInvestigationId=id;
-  db.collection('investigations').doc(id).get().then(doc=>{
-    const d=doc.data();
-    document.getElementById('investigationEditNotes').value=d.investigationNotes||'';
-    document.getElementById('timeline').value=d.timeline||'';
-    document.getElementById('interviews').value=d.interviews||'';
-    document.getElementById('expertComments').value=d.expertComments||'';
-    document.getElementById('finalNotes').value=d.finalNotes||'';
-    document.getElementById('recommendedPunishment').value=d.recommendedPunishment||'';
-    document.getElementById('givenPunishment').value=d.givenPunishment||'';
-    document.getElementById('investigationModal').style.display='flex';
-  });
-}
-function saveInvestigation(){
-  if(!editingInvestigationId) return;
-  const data={
-    investigationNotes: document.getElementById('investigationEditNotes').value,
-    timeline: document.getElementById('timeline').value,
-    interviews: document.getElementById('interviews').value,
-    expertComments: document.getElementById('expertComments').value,
-    finalNotes: document.getElementById('finalNotes').value,
-    recommendedPunishment: document.getElementById('recommendedPunishment').value,
-    givenPunishment: document.getElementById('givenPunishment').value
-  };
-  db.collection('investigations').doc(editingInvestigationId).update(data).then(()=>{
-    alert("Investigation updated!");
-    editingInvestigationId=null;
-    closeInvestigationModal();
-    loadAllInvestigations();
-  });
-}
-async function closeInvestigation(id){if(!confirm("Close this investigation?")) return; await db.collection('investigations').doc(id).update({status:'closed'}); loadAllInvestigations();}
-async function deleteInvestigation(id){if(!confirm("Delete this investigation?")) return; await db.collection('investigations').doc(id).delete(); loadAllInvestigations();}
-function closeInvestigationModal(){document.getElementById('investigationModal').style.display='none';}
-function cancelInvestigationEdit(){editingInvestigationId=null; closeInvestigationModal();}
-function printInvestigation(id){
-  db.collection('investigations').doc(id).get().then(doc=>{
-    const d=doc.data();
-    const win=window.open('','_blank');
-    win.document.write(`<h2>Investigation ${d.incidentNumber}</h2><p>Notes: ${d.investigationNotes||'None'}</p><p>Timeline: ${d.timeline||'None'}</p><p>Interviews: ${d.interviews||'None'}</p><p>Expert Comments: ${d.expertComments||'None'}</p><p>Final Notes: ${d.finalNotes||'None'}</p><p>Recommended Punishment: ${d.recommendedPunishment||'None'}</p><p>Given Punishment: ${d.givenPunishment||'None'}</p>`);
-    win.print();
-  });
-}
-
-// --- FILTER ---
+// Filtering
 function applyFilters(){
   const filter=document.getElementById('searchFilter').value.toLowerCase();
   document.querySelectorAll('.tab-content.active .card').forEach(card=>{
@@ -402,11 +190,120 @@ function applyFilters(){
   });
 }
 
-// Initial load
-loadAllIncidents();
-loadAllInvestigations();
+// --- Load Incidents ---
+async function loadIncidents(){
+  const activeContainer=document.getElementById('active-incidents');
+  const closedContainer=document.getElementById('closed-incidents');
+  activeContainer.innerHTML='Loading...';
+  closedContainer.innerHTML='Loading...';
+  const snap=await db.collection('incidents').orderBy('timestamp','desc').get();
+  activeContainer.innerHTML=''; closedContainer.innerHTML='';
+  snap.forEach(doc=>{
+    const d=doc.data();
+    const div=document.createElement('div'); div.className='card';
+    div.innerHTML=`<div class="card-header">${d.incidentNumber} | Team: ${d.team} ${d.status==='closed'?'<span class="closed-label">[CLOSED]</span>':''}</div>
+      <div class="card-actions">
+        <button onclick="editIncident('${doc.id}')">View / Edit</button>
+        ${d.status!=='closed'?`<button onclick="closeIncident('${doc.id}')">Close</button>`:''}
+        <button onclick="deleteIncident('${doc.id}')">Delete</button>
+        <button onclick="sendToInvestigation('${doc.id}')">Send to Investigation</button>
+        <button onclick="printIncident('${doc.id}')">Print</button>
+      </div>`;
+    if(d.status==='open') activeContainer.appendChild(div);
+    else closedContainer.appendChild(div);
+  });
+}
 
+// --- Load Investigations ---
+async function loadInvestigations(){
+  const activeContainer=document.getElementById('active-investigations');
+  const closedContainer=document.getElementById('closed-investigations');
+  activeContainer.innerHTML='Loading...'; closedContainer.innerHTML='Loading...';
+  const snap=await db.collection('investigations').orderBy('timestamp','desc').get();
+  activeContainer.innerHTML=''; closedContainer.innerHTML='';
+  snap.forEach(doc=>{
+    const d=doc.data();
+    const div=document.createElement('div'); div.className='card';
+    div.innerHTML=`<div class="card-header">Incident: ${d.incidentNumber} | Team: ${d.team} ${d.status==='closed'?'<span class="closed-label">[CLOSED]</span>':''}</div>
+      <div class="card-actions">
+        <button onclick="editInvestigation('${doc.id}')">View / Edit</button>
+        ${d.status!=='closed'?`<button onclick="closeInvestigation('${doc.id}')">Close</button>`:''}
+        <button onclick="deleteInvestigation('${doc.id}')">Delete</button>
+        <button onclick="printInvestigation('${doc.id}')">Print</button>
+      </div>`;
+    if(d.status==='open') activeContainer.appendChild(div);
+    else closedContainer.appendChild(div);
+  });
+}
+
+// --- Incident Modal Functions ---
+function openIncidentModal(){
+  editingIncidentId=null;
+  document.getElementById('incidentModal').style.display='flex';
+  document.getElementById('modalTitle').innerText='Create Incident';
+  document.querySelectorAll('#incidentModal input,#incidentModal textarea').forEach(i=>i.value='');
+  document.getElementById('attachmentList').innerHTML='';
+}
+function closeIncidentModal(){document.getElementById('incidentModal').style.display='none';}
+function cancelIncidentEdit(){editingIncidentId=null; closeIncidentModal();}
+function editIncident(id){
+  editingIncidentId=id;
+  document.getElementById('incidentModal').style.display='flex';
+  document.getElementById('modalTitle').innerText='Edit Incident';
+  db.collection('incidents').doc(id).get().then(doc=>{
+    const d=doc.data();
+    document.getElementById('incidentNumber').value=d.incidentNumber;
+    document.getElementById('incidentDate').value=d.incidentDate;
+    document.getElementById('team').value=d.team;
+    document.getElementById('arena').value=d.arena;
+    document.getElementById('players').value=d.players?.join(',')||'';
+    document.getElementById('coaches').value=d.coaches?.join(',')||'';
+    document.getElementById('description').value=d.description;
+    document.getElementById('actionsTaken').value=d.actionsTaken||'';
+    document.getElementById('punishment').value=d.punishment||'';
+    document.getElementById('investigationNotes').value=d.investigationNotes||'';
+    // attachments
+    const list=document.getElementById('attachmentList'); list.innerHTML='';
+    (d.attachments||[]).forEach(a=>{
+      const aEl=document.createElement('a'); aEl.href=a.url; aEl.target='_blank'; aEl.innerText=a.name; list.appendChild(aEl);
+    });
+  });
+}
+async function saveIncident(){
+  const incidentDate=document.getElementById('incidentDate').value;
+  const team=document.getElementById('team').value.trim();
+  const arena=document.getElementById('arena').value.trim();
+  const description=document.getElementById('description').value.trim();
+  if(!incidentDate || !team || !arena || !description){alert("Fill required fields"); return;}
+  const data={
+    incidentNumber: document.getElementById('incidentNumber').value || 'Temp-'+Date.now(),
+    incidentDate,
+    team,
+    arena,
+    players: document.getElementById('players').value.split(',').map(p=>p.trim()).filter(p=>p),
+    coaches: document.getElementById('coaches').value.split(',').map(c=>c.trim()).filter(c=>c),
+    description,
+    actionsTaken: document.getElementById('actionsTaken').value,
+    punishment: document.getElementById('punishment').value,
+    investigationNotes: document.getElementById('investigationNotes').value,
+    status:'open',
+    timestamp:firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if(editingIncidentId){
+    await db.collection('incidents').doc(editingIncidentId).update(data);
+  } else {
+    await db.collection('incidents').add(data);
+  }
+  cancelIncidentEdit();
+  loadIncidents();
+}
+
+// Close, delete, reopen, print, sendToInvestigation functions would follow similar patterns
+
+// Initial Load
+loadIncidents();
+loadInvestigations();
 </script>
-
 </body>
 </html>
+
