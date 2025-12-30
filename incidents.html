@@ -141,7 +141,7 @@ button:hover {opacity:0.9;}
 </div>
 
 <script>
-// Firebase setup
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
   authDomain: "nepean-knights-executive-hub.firebaseapp.com",
@@ -168,31 +168,244 @@ document.querySelectorAll('.tab').forEach(tab=>{
     tab.classList.add('active');
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
     document.getElementById(tab.dataset.tab).classList.add('active');
+    applyFilters();
   });
 });
 
-// Show suspension fields
+// Suspension fields
 document.getElementById('punishment').addEventListener('input', function(){
   document.getElementById('suspensionFields').style.display=this.value.toLowerCase().includes('suspension')?'block':'none';
 });
 
-// --- Incident & Investigation Functions ---
-// Functions like openIncidentModal, saveIncident, loadIncidents, editIncident, closeIncident, deleteIncident, sendToInvestigation
-// Functions for Investigations: editInvestigation, saveInvestigation, closeInvestigation, deleteInvestigation
-// Functions for printIncident, printInvestigation
-// All functions adapted to write into correct tab-content divs
+// --- INCIDENT FUNCTIONS ---
+function openIncidentModal(){
+  document.getElementById('incidentModal').style.display='flex';
+  document.getElementById('modalTitle').innerText=editingIncidentId?'Edit Incident':'Create Incident';
+  if(!editingIncidentId){
+    document.querySelectorAll('#incidentModal input,#incidentModal textarea').forEach(i=>i.value='');
+    autoPopulateIncidentNumber();
+  }
+}
+function closeIncidentModal(){document.getElementById('incidentModal').style.display='none';}
+function cancelIncidentEdit(){editingIncidentId=null; closeIncidentModal();}
 
-// Filters
+async function autoPopulateIncidentNumber(){
+  const now=new Date();
+  const yy=String(now.getFullYear()).slice(-2);
+  const mm=String(now.getMonth()+1).padStart(2,'0');
+  const snap = await db.collection("incidents")
+    .orderBy("incidentNumber","desc").limit(1).get();
+  let nextNum="001";
+  if(!snap.empty){
+    const lastNum = snap.docs[0].data().incidentNumber.split("-")[2];
+    nextNum=String(parseInt(lastNum)+1).padStart(3,'0');
+  }
+  document.getElementById('incidentNumber').value=`${yy}-${mm}-${nextNum}`;
+}
+
+// Save Incident
+async function saveIncident(){
+  const incidentNumber=document.getElementById('incidentNumber').value;
+  const incidentDate=document.getElementById('incidentDate').value;
+  const team=document.getElementById('team').value.trim();
+  const arena=document.getElementById('arena').value.trim();
+  const players=document.getElementById('players').value.split(',').map(p=>p.trim()).filter(p=>p);
+  const coaches=document.getElementById('coaches').value.split(',').map(c=>c.trim()).filter(c=>c);
+  const description=document.getElementById('description').value.trim();
+  const actionsTaken=document.getElementById('actionsTaken').value.trim();
+  const punishment=document.getElementById('punishment').value.trim();
+  const suspensionStart=document.getElementById('suspensionStart').value;
+  const suspensionEnd=document.getElementById('suspensionEnd').value;
+  const investigationNotes=document.getElementById('investigationNotes').value.trim();
+  const files=document.getElementById('attachment').files;
+  if(!incidentDate||!team||!arena||!description){alert("Fill required fields"); return;}
+  const data={incidentNumber,incidentDate,team,arena,players,coaches,description,actionsTaken,punishment,investigationNotes,status:'open',timestamp:firebase.firestore.FieldValue.serverTimestamp()};
+  if(files.length>0){
+    const urls=[];
+    for(let f of files){
+      const ref=storage.ref().child(`attachments/${incidentNumber}/${f.name}`);
+      await ref.put(f);
+      urls.push({name:f.name,url:await ref.getDownloadURL()});
+    }
+    data.attachments=urls;
+  }
+  if(editingIncidentId){
+    await db.collection('incidents').doc(editingIncidentId).update(data);
+    alert("Incident updated!");
+  } else {
+    await db.collection('incidents').add(data);
+    alert("Incident saved!");
+  }
+  editingIncidentId=null;
+  closeIncidentModal();
+  loadAllIncidents();
+}
+
+// Load all incidents into appropriate tabs
+async function loadAllIncidents(){
+  const activeContainer=document.getElementById('active-incidents');
+  const closedContainer=document.getElementById('closed-incidents');
+  activeContainer.innerHTML="Loading...";
+  closedContainer.innerHTML="Loading...";
+  const snap=await db.collection('incidents').orderBy('timestamp','desc').get();
+  activeContainer.innerHTML="";
+  closedContainer.innerHTML="";
+  snap.forEach(doc=>{
+    const d=doc.data();
+    const div=document.createElement('div');
+    div.className='card';
+    div.dataset.status=d.status;
+    div.innerHTML=`<div class="card-header"><strong>${d.incidentNumber}</strong> | ${d.incidentDate} | Team: ${d.team} ${d.status==='closed'?'<span class="closed-label">[CLOSED]</span>':''}</div>
+    <div class="card-body">
+      Arena: ${d.arena}<br>
+      Players: ${d.players?.join(',')||'N/A'}<br>
+      Coaches: ${d.coaches?.join(',')||'N/A'}<br>
+      ${d.description}<br>
+      Actions: ${d.actionsTaken}<br>
+      Punishment: ${d.punishment||'None'}<br>
+      <div class="attachment-list">${d.attachments?.map(a=>`<a href="${a.url}" target="_blank">${a.name}</a>`).join('')||''}</div>
+      Investigation Notes: ${d.investigationNotes||'None'}<br>
+      <div class="incident-actions">
+        <button onclick="editIncident('${doc.id}')">Edit</button>
+        <button onclick="sendToInvestigation('${doc.id}')">Send to Investigation</button>
+        ${d.status!=='closed'?`<button onclick="closeIncident('${doc.id}')">Close</button>`:''}
+        <button onclick="deleteIncident('${doc.id}')">Delete</button>
+        <button onclick="printIncident('${doc.id}')">Print</button>
+      </div>
+    </div>`;
+    if(d.status==='open') activeContainer.appendChild(div);
+    else closedContainer.appendChild(div);
+  });
+}
+
+// Edit/Close/Delete/Send
+async function editIncident(id){
+  editingIncidentId=id;
+  const doc=await db.collection('incidents').doc(id).get();
+  const d=doc.data();
+  document.getElementById('modalTitle').innerText='Edit Incident';
+  openIncidentModal();
+  document.getElementById('incidentNumber').value=d.incidentNumber;
+  document.getElementById('incidentDate').value=d.incidentDate;
+  document.getElementById('team').value=d.team;
+  document.getElementById('arena').value=d.arena;
+  document.getElementById('players').value=d.players?.join(',')||'';
+  document.getElementById('coaches').value=d.coaches?.join(',')||'';
+  document.getElementById('description').value=d.description;
+  document.getElementById('actionsTaken').value=d.actionsTaken;
+  document.getElementById('punishment').value=d.punishment||'';
+  document.getElementById('investigationNotes').value=d.investigationNotes||'';
+  document.getElementById('suspensionFields').style.display=d.punishment?.toLowerCase().includes('suspension')?'block':'none';
+}
+async function closeIncident(id){if(!confirm("Close this incident?")) return; await db.collection('incidents').doc(id).update({status:'closed'}); loadAllIncidents();}
+async function deleteIncident(id){if(!confirm("Delete this incident?")) return; await db.collection('incidents').doc(id).delete(); loadAllIncidents();}
+async function sendToInvestigation(id){
+  const doc=await db.collection('incidents').doc(id).get();
+  const data=doc.data();
+  await db.collection('investigations').add({...data, incidentId:id, status:'open', timestamp:firebase.firestore.FieldValue.serverTimestamp()});
+  alert("Sent to investigation!");
+  loadAllInvestigations();
+}
+function printIncident(id){
+  db.collection('incidents').doc(id).get().then(doc=>{
+    const d=doc.data();
+    const win=window.open('','_blank');
+    win.document.write(`<h2>Incident ${d.incidentNumber}</h2><p>Date: ${d.incidentDate}</p><p>Team: ${d.team}</p><p>Arena: ${d.arena}</p><p>Description: ${d.description}</p><p>Actions: ${d.actionsTaken}</p><p>Punishment: ${d.punishment||'None'}</p><p>Investigation Notes: ${d.investigationNotes||'None'}</p>`);
+    win.print();
+  });
+}
+
+// --- INVESTIGATION FUNCTIONS ---
+async function loadAllInvestigations(){
+  const activeContainer=document.getElementById('active-investigations');
+  const closedContainer=document.getElementById('closed-investigations');
+  activeContainer.innerHTML="Loading...";
+  closedContainer.innerHTML="Loading...";
+  const snap=await db.collection('investigations').orderBy('timestamp','desc').get();
+  activeContainer.innerHTML="";
+  closedContainer.innerHTML="";
+  snap.forEach(doc=>{
+    const d=doc.data();
+    const div=document.createElement('div');
+    div.className='card';
+    div.dataset.status=d.status;
+    div.innerHTML=`<div class="card-header"><strong>Incident: ${d.incidentNumber}</strong> | Team: ${d.team} ${d.status==='closed'?'<span class="closed-label">[CLOSED]</span>':''}</div>
+    <div class="card-body">
+      Investigation Notes: ${d.investigationNotes||'None'}<br>
+      Timeline: ${d.timeline||'None'}<br>
+      Interviews: ${d.interviews||'None'}<br>
+      Expert Comments: ${d.expertComments||'None'}<br>
+      Final Notes: ${d.finalNotes||'None'}<br>
+      Recommended Punishment: ${d.recommendedPunishment||'None'}<br>
+      Given Punishment: ${d.givenPunishment||'None'}<br>
+      <div class="incident-actions">
+        <button onclick="editInvestigation('${doc.id}')">Edit Notes</button>
+        ${d.status!=='closed'?`<button onclick="closeInvestigation('${doc.id}')">Close</button>`:''}
+        <button onclick="deleteInvestigation('${doc.id}')">Delete</button>
+        <button onclick="printInvestigation('${doc.id}')">Print</button>
+      </div>
+    </div>`;
+    if(d.status==='open') activeContainer.appendChild(div);
+    else closedContainer.appendChild(div);
+  });
+}
+function editInvestigation(id){
+  editingInvestigationId=id;
+  db.collection('investigations').doc(id).get().then(doc=>{
+    const d=doc.data();
+    document.getElementById('investigationEditNotes').value=d.investigationNotes||'';
+    document.getElementById('timeline').value=d.timeline||'';
+    document.getElementById('interviews').value=d.interviews||'';
+    document.getElementById('expertComments').value=d.expertComments||'';
+    document.getElementById('finalNotes').value=d.finalNotes||'';
+    document.getElementById('recommendedPunishment').value=d.recommendedPunishment||'';
+    document.getElementById('givenPunishment').value=d.givenPunishment||'';
+    document.getElementById('investigationModal').style.display='flex';
+  });
+}
+function saveInvestigation(){
+  if(!editingInvestigationId) return;
+  const data={
+    investigationNotes: document.getElementById('investigationEditNotes').value,
+    timeline: document.getElementById('timeline').value,
+    interviews: document.getElementById('interviews').value,
+    expertComments: document.getElementById('expertComments').value,
+    finalNotes: document.getElementById('finalNotes').value,
+    recommendedPunishment: document.getElementById('recommendedPunishment').value,
+    givenPunishment: document.getElementById('givenPunishment').value
+  };
+  db.collection('investigations').doc(editingInvestigationId).update(data).then(()=>{
+    alert("Investigation updated!");
+    editingInvestigationId=null;
+    closeInvestigationModal();
+    loadAllInvestigations();
+  });
+}
+async function closeInvestigation(id){if(!confirm("Close this investigation?")) return; await db.collection('investigations').doc(id).update({status:'closed'}); loadAllInvestigations();}
+async function deleteInvestigation(id){if(!confirm("Delete this investigation?")) return; await db.collection('investigations').doc(id).delete(); loadAllInvestigations();}
+function closeInvestigationModal(){document.getElementById('investigationModal').style.display='none';}
+function cancelInvestigationEdit(){editingInvestigationId=null; closeInvestigationModal();}
+function printInvestigation(id){
+  db.collection('investigations').doc(id).get().then(doc=>{
+    const d=doc.data();
+    const win=window.open('','_blank');
+    win.document.write(`<h2>Investigation ${d.incidentNumber}</h2><p>Notes: ${d.investigationNotes||'None'}</p><p>Timeline: ${d.timeline||'None'}</p><p>Interviews: ${d.interviews||'None'}</p><p>Expert Comments: ${d.expertComments||'None'}</p><p>Final Notes: ${d.finalNotes||'None'}</p><p>Recommended Punishment: ${d.recommendedPunishment||'None'}</p><p>Given Punishment: ${d.givenPunishment||'None'}</p>`);
+    win.print();
+  });
+}
+
+// --- FILTER ---
 function applyFilters(){
-  const filter = document.getElementById('searchFilter').value.toLowerCase();
+  const filter=document.getElementById('searchFilter').value.toLowerCase();
   document.querySelectorAll('.tab-content.active .card').forEach(card=>{
-    card.style.display = card.textContent.toLowerCase().includes(filter)?'':'none';
+    card.style.display=card.textContent.toLowerCase().includes(filter)?'':'none';
   });
 }
 
 // Initial load
 loadAllIncidents();
 loadAllInvestigations();
+
 </script>
 
 </body>
