@@ -12,92 +12,93 @@
     <style>
         :root {
             --primary: #E41F26;
-            --primary-hover: #b3181d;
             --secondary: #FFD200;
             --dark: #1a1a1a;
-            --light-bg: #f4f7f6;
+            --bg: #f4f7f6;
             --white: #ffffff;
-            --shadow: 0 4px 12px rgba(0,0,0,0.1);
-            --radius: 8px;
-            --success: #28a745;
+            --grey: #6c757d;
+            --danger: #dc3545;
         }
 
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--light-bg); color: var(--dark); }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--dark); }
         header { background: var(--dark); color: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--primary); }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
         /* Buttons */
-        .btn { cursor: pointer; border: none; border-radius: var(--radius); padding: 10px 18px; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn { cursor: pointer; border: none; border-radius: 6px; padding: 10px 18px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: var(--white); }
         .btn-outline { background: transparent; border: 1px solid #ccc; color: #555; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-archive { background: var(--grey); color: white; }
 
         /* Tabs */
-        .tabs-nav { margin: 20px 0; display: flex; gap: 20px; border-bottom: 1px solid #ddd; }
-        .tab { padding: 12px 10px; cursor: pointer; font-weight: bold; color: #777; position: relative; }
+        .tabs-nav { margin: 20px 0; display: flex; gap: 20px; border-bottom: 2px solid #ddd; }
+        .tab { padding: 12px 15px; cursor: pointer; font-weight: bold; color: #777; position: relative; }
         .tab.active { color: var(--primary); }
-        .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background: var(--primary); }
+        .tab.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 4px; background: var(--primary); }
 
         /* Grid & Cards */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-        .card { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border-top: 4px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
-        .card h4 { margin: 0; }
-        .card-meta { font-size: 0.8rem; color: #888; }
-
+        .card { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid var(--secondary); display: flex; flex-direction: column; gap: 10px; }
+        .card.archived { border-top-color: var(--grey); opacity: 0.8; }
+        
         /* Modals */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: var(--white); width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; padding: 30px; border-radius: var(--radius); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: var(--white); width: 100%; max-width: 850px; max-height: 90vh; overflow-y: auto; padding: 30px; border-radius: 10px; }
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
         .span-2 { grid-column: span 2; }
-        label { font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; display: block; }
+        label { font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 5px; }
         input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; }
         
         .hidden { display: none; }
-        .status-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+        .badge { font-size: 0.7rem; padding: 3px 7px; border-radius: 4px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; display: inline-block; }
     </style>
 </head>
 
 <body>
 
 <header>
-    <div><h2 style="margin:0">Nepean Knights</h2><small>Executive Incident Portal</small></div>
-    <div style="display:flex; align-items:center; gap:15px;">
-        <span id="userEmail" style="font-size:0.8rem"></span>
-        <button class="btn btn-outline" style="color:white" id="btnLogout">Logout</button>
+    <h2>Nepean Knights – Executive Hub</h2>
+    <div style="display:flex; align-items:center; gap:20px;">
+        <span id="userEmail" style="font-size:0.9rem"></span>
+        <button class="btn btn-outline" style="color:white; border-color:white;" onclick="logout()">Logout</button>
     </div>
 </header>
 
 <div class="container">
     <div style="display:flex; justify-content: space-between; align-items: center;">
         <div class="tabs-nav">
-            <div class="tab active" data-tab="incidents">Active Incidents</div>
-            <div class="tab" data-tab="investigations">Active Investigations</div>
-            <div class="tab" data-tab="archive">Archive (Closed Cases)</div>
+            <div class="tab active" id="tab-incidents" onclick="switchTab('incidents')">Active Incidents</div>
+            <div class="tab" id="tab-investigations" onclick="switchTab('investigations')">Active Investigations</div>
+            <div class="tab" id="tab-archive" onclick="switchTab('archive')">Archive (Closed)</div>
         </div>
-        <button class="btn btn-primary" onclick="openIncidentModal()">＋ New Incident</button>
+        <button class="btn btn-primary" onclick="openNewIncident()">＋ New Incident</button>
     </div>
 
-    <div id="incidentList" class="grid"></div>
-    <div id="investigationList" class="grid hidden"></div>
-    <div id="archiveList" class="grid hidden"></div>
+    <div id="section-incidents" class="grid"></div>
+    <div id="section-investigations" class="grid hidden"></div>
+    <div id="section-archive" class="grid hidden"></div>
 </div>
 
 <div class="modal" id="incidentModal">
     <div class="modal-content">
-        <h2>Incident Report</h2>
+        <h2 id="incHeader">Incident Report</h2>
         <div class="form-grid">
             <div><label>Date</label><input type="date" id="iDate"></div>
             <div><label>Team</label><input type="text" id="iTeam"></div>
-            <div class="span-2"><label>Description</label><textarea id="iDescription" rows="4"></textarea></div>
-            <div class="span-2"><label>Internal Notes</label><textarea id="iNotes" rows="2"></textarea></div>
+            <div class="span-2"><label>Description</label><textarea id="iDescription" rows="5"></textarea></div>
+            <div class="span-2"><label>Internal Office Notes</label><textarea id="iNotes" rows="2"></textarea></div>
         </div>
-        <div style="margin-top:20px; display:flex; justify-content: flex-end; gap:10px;">
-            <button class="btn btn-outline" onclick="closeModals()">Cancel</button>
-            <button class="btn btn-danger" id="btnCloseIncident">Close & Archive</button>
-            <button class="btn btn-primary" id="btnSaveIncident">Save</button>
-            <button class="btn btn-success" id="btnPromote">Promote to Investigation</button>
+        <div style="margin-top:25px; display:flex; justify-content: space-between;">
+            <button class="btn btn-danger" id="btnDeleteIncident" onclick="deleteCurrentIncident()">🗑 Delete Forever</button>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-outline" onclick="closeModals()">Cancel</button>
+                <button class="btn btn-archive" id="btnArchiveIncident" onclick="archiveCurrentIncident()">Close & Archive</button>
+                <button class="btn btn-primary" onclick="saveIncident()">Save Changes</button>
+                <button class="btn btn-success" id="btnPromote" onclick="promoteToInvestigation()">Promote</button>
+            </div>
         </div>
     </div>
 </div>
@@ -106,22 +107,23 @@
     <div class="modal-content">
         <h2>Investigation File</h2>
         <div class="form-grid">
-            <div class="span-2"><label>Case Summary</label><textarea id="vSummary" rows="2"></textarea></div>
-            <textarea id="vPlayers" placeholder="Players Involved"></textarea>
-            <textarea id="vEvidence" placeholder="Evidence Links"></textarea>
-            <textarea id="vFindings" class="span-2" placeholder="Findings of Fact"></textarea>
-            <textarea id="vOutcome" class="span-2" placeholder="Final Decision / Sanction"></textarea>
+            <div class="span-2"><label>Case Summary</label><textarea id="vSummary"></textarea></div>
+            <div class="span-2"><label>Players / Coaches Involved</label><textarea id="vPeople"></textarea></div>
+            <div class="span-2"><label>Findings & Outcomes</label><textarea id="vFindings" rows="6"></textarea></div>
         </div>
-        <div style="margin-top:20px; display:flex; justify-content: flex-end; gap:10px;">
-            <button class="btn btn-outline" onclick="closeModals()">Back</button>
-            <button class="btn btn-danger" id="btnCloseInvestigation">Close & Archive Case</button>
-            <button class="btn btn-primary" id="btnSaveInvestigation">Save Progress</button>
+        <div style="margin-top:25px; display:flex; justify-content: space-between;">
+            <button class="btn btn-danger" id="btnDeleteInvestigation" onclick="deleteCurrentInvestigation()">🗑 Delete File</button>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-outline" onclick="closeModals()">Close</button>
+                <button class="btn btn-archive" id="btnArchiveInv" onclick="archiveCurrentInvestigation()">Finalize & Archive</button>
+                <button class="btn btn-primary" onclick="saveInvestigation()">Save Progress</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-/* ================= FIREBASE SETUP ================= */
+/* ================= FIREBASE INITIALIZATION ================= */
 const firebaseConfig = {
     apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
     authDomain: "nepean-knights-executive-hub.firebaseapp.com",
@@ -141,93 +143,52 @@ auth.onAuthStateChanged(user => {
     document.getElementById('userEmail').innerText = userEmail;
 });
 
-/* ================= AUDIT LOGGING ================= */
-async function audit(action, docId, type) {
+function logout() { auth.signOut(); }
+
+async function auditLog(action, docId, type) {
     await db.collection('audit_logs').add({
-        executive: userEmail,
+        user: userEmail,
         action: action,
-        docId: docId,
+        id: docId,
         type: type,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 }
 
-/* ================= TAB NAVIGATION ================= */
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        const target = tab.dataset.tab;
-        document.getElementById('incidentList').classList.toggle('hidden', target !== 'incidents');
-        document.getElementById('investigationList').classList.toggle('hidden', target !== 'investigations');
-        document.getElementById('archiveList').classList.toggle('hidden', target !== 'archive');
-    });
-});
+/* ================= TAB SYSTEM ================= */
+function switchTab(type) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + type).classList.add('active');
+    document.getElementById('section-incidents').classList.toggle('hidden', type !== 'incidents');
+    document.getElementById('section-investigations').classList.toggle('hidden', type !== 'investigations');
+    document.getElementById('section-archive').classList.toggle('hidden', type !== 'archive');
+    if(type === 'archive') loadArchive();
+}
 
-function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
-/* ================= DATA LOADING ================= */
-
-// Load Incidents (Active)
-db.collection('incidents').where('status', '==', 'active').onSnapshot(snap => {
-    const list = document.getElementById('incidentList');
+/* ================= INCIDENT LOGIC ================= */
+db.collection('incidents').orderBy('timestamp', 'desc').onSnapshot(snap => {
+    const list = document.getElementById('section-incidents');
     list.innerHTML = '';
     snap.forEach(doc => {
         const d = doc.data();
-        list.innerHTML += `<div class="card">
-            <div class="card-meta">${d.incidentDate}</div>
-            <h4>${d.team}</h4>
-            <p>${d.description?.substring(0,80)}...</p>
-            <button class="btn btn-outline" onclick="editIncident('${doc.id}')">Open</button>
-        </div>`;
+        if (d.status === 'archived') return;
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<small>${d.incidentDate || ''}</small><h4>${d.team || 'Unknown'}</h4><p>${(d.description || '').substring(0, 100)}...</p><button class="btn btn-outline" onclick="editIncident('${doc.id}')">Open Report</button>`;
+        list.appendChild(card);
     });
 });
 
-// Load Investigations (Active)
-db.collection('investigations').where('status', '==', 'active').onSnapshot(snap => {
-    const list = document.getElementById('investigationList');
-    list.innerHTML = '';
-    snap.forEach(doc => {
-        const d = doc.data();
-        list.innerHTML += `<div class="card" style="border-top-color:var(--primary)">
-            <div class="card-meta">INVESTIGATION</div>
-            <h4>${d.team || 'Case File'}</h4>
-            <button class="btn btn-primary" onclick="editInvestigation('${doc.id}')">View File</button>
-        </div>`;
-    });
-});
-
-// Load Archive (Both Incidents and Investigations)
-function loadArchive() {
-    const list = document.getElementById('archiveList');
-    list.innerHTML = '';
-    
-    // Get Closed Incidents
-    db.collection('incidents').where('status', '==', 'archived').get().then(snap => {
-        snap.forEach(doc => renderArchiveItem(doc.data(), 'Incident Archive'));
-    });
-    // Get Closed Investigations
-    db.collection('investigations').where('status', '==', 'archived').get().then(snap => {
-        snap.forEach(doc => renderArchiveItem(doc.data(), 'Investigation Archive'));
-    });
-}
-function renderArchiveItem(d, label) {
-    document.getElementById('archiveList').innerHTML += `<div class="card" style="opacity:0.7; border-top-color:#666">
-        <div class="status-tag" style="background:#666; color:white; width:fit-content">${label}</div>
-        <h4>${d.team || 'Archived'}</h4>
-        <p>${d.incidentDate || ''}</p>
-    </div>`;
-}
-document.querySelector('[data-tab="archive"]').addEventListener('click', loadArchive);
-
-/* ================= ACTIONS ================= */
-
-function openIncidentModal() {
+function openNewIncident() {
     currentId = null;
-    document.getElementById('iDate').value = '';
-    document.getElementById('iTeam').value = '';
-    document.getElementById('iDescription').value = '';
-    document.getElementById('iNotes').value = '';
+    document.getElementById('incHeader').innerText = "New Incident Report";
+    document.getElementById('iDate').value = ""; document.getElementById('iTeam').value = "";
+    document.getElementById('iDescription').value = ""; document.getElementById('iNotes').value = "";
+    document.getElementById('btnArchiveIncident').style.display = 'none';
+    document.getElementById('btnDeleteIncident').style.display = 'none';
+    document.getElementById('btnPromote').style.display = 'none';
     document.getElementById('incidentModal').style.display = 'flex';
 }
 
@@ -235,14 +196,17 @@ async function editIncident(id) {
     currentId = id;
     const doc = await db.collection('incidents').doc(id).get();
     const d = doc.data();
-    document.getElementById('iDate').value = d.incidentDate;
-    document.getElementById('iTeam').value = d.team;
-    document.getElementById('iDescription').value = d.description;
-    document.getElementById('iNotes').value = d.notes;
+    document.getElementById('iDate').value = d.incidentDate || "";
+    document.getElementById('iTeam').value = d.team || "";
+    document.getElementById('iDescription').value = d.description || "";
+    document.getElementById('iNotes').value = d.notes || "";
+    document.getElementById('btnArchiveIncident').style.display = 'inline-flex';
+    document.getElementById('btnDeleteIncident').style.display = 'inline-flex';
+    document.getElementById('btnPromote').style.display = 'inline-flex';
     document.getElementById('incidentModal').style.display = 'flex';
 }
 
-document.getElementById('btnSaveIncident').onclick = async () => {
+async function saveIncident() {
     const data = {
         incidentDate: document.getElementById('iDate').value,
         team: document.getElementById('iTeam').value,
@@ -251,75 +215,107 @@ document.getElementById('btnSaveIncident').onclick = async () => {
         status: 'active',
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
-    if (currentId) {
+    if(currentId) {
         await db.collection('incidents').doc(currentId).update(data);
-        audit('Updated Incident', currentId, 'incident');
+        auditLog('Updated Incident', currentId, 'incident');
     } else {
-        const ref = await db.collection('incidents').add(data);
-        audit('Created Incident', ref.id, 'incident');
+        const res = await db.collection('incidents').add(data);
+        auditLog('Created Incident', res.id, 'incident');
     }
     closeModals();
-};
+}
 
-document.getElementById('btnCloseIncident').onclick = async () => {
-    if (!currentId) return;
-    if (confirm("Archive this incident? It will be moved to history.")) {
-        await db.collection('incidents').doc(currentId).update({ status: 'archived' });
-        audit('Archived Incident', currentId, 'incident');
-        closeModals();
-    }
-};
+async function archiveCurrentIncident() {
+    if(!confirm("Archive this incident?")) return;
+    await db.collection('incidents').doc(currentId).update({ status: 'archived' });
+    auditLog('Archived Incident', currentId, 'incident');
+    closeModals();
+}
 
-document.getElementById('btnPromote').onclick = async () => {
-    if (!currentId) return alert("Save first");
+async function deleteCurrentIncident() {
+    if(!confirm("CRITICAL: Delete this record forever? This cannot be undone.")) return;
+    if(!confirm("Are you absolutely sure?")) return;
+    await db.collection('incidents').doc(currentId).delete();
+    auditLog('DELETED Incident', currentId, 'incident');
+    closeModals();
+}
+
+async function promoteToInvestigation() {
     const doc = await db.collection('incidents').doc(currentId).get();
     const d = doc.data();
-    const invRef = await db.collection('investigations').add({
-        team: d.team,
-        incidentDate: d.incidentDate,
-        summary: d.description,
-        status: 'active',
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    const res = await db.collection('investigations').add({
+        team: d.team, incidentDate: d.incidentDate, summary: d.description, status: 'active', timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
     await db.collection('incidents').doc(currentId).update({ status: 'archived' });
-    audit('Promoted to Investigation', invRef.id, 'investigation');
+    auditLog('Promoted to Investigation', res.id, 'investigation');
     closeModals();
-};
+    switchTab('investigations');
+}
+
+/* ================= INVESTIGATION LOGIC ================= */
+db.collection('investigations').orderBy('timestamp', 'desc').onSnapshot(snap => {
+    const list = document.getElementById('section-investigations');
+    list.innerHTML = '';
+    snap.forEach(doc => {
+        const d = doc.data();
+        if (d.status === 'archived') return;
+        const card = document.createElement('div');
+        card.className = 'card'; card.style.borderTopColor = 'var(--primary)';
+        card.innerHTML = `<span class="badge" style="background:var(--primary); color:white;">ACTIVE CASE</span><h4>${d.team}</h4><p>${(d.summary || '').substring(0, 80)}...</p><button class="btn btn-primary" onclick="editInvestigation('${doc.id}')">View Case File</button>`;
+        list.appendChild(card);
+    });
+});
 
 async function editInvestigation(id) {
     currentInvId = id;
     const doc = await db.collection('investigations').doc(id).get();
     const d = doc.data();
-    document.getElementById('vSummary').value = d.summary || '';
-    document.getElementById('vPlayers').value = d.players || '';
-    document.getElementById('vEvidence').value = d.evidence || '';
-    document.getElementById('vFindings').value = d.findings || '';
-    document.getElementById('vOutcome').value = d.outcome || '';
+    document.getElementById('vSummary').value = d.summary || "";
+    document.getElementById('vPeople').value = d.people || "";
+    document.getElementById('vFindings').value = d.findings || "";
     document.getElementById('investigationModal').style.display = 'flex';
 }
 
-document.getElementById('btnSaveInvestigation').onclick = async () => {
+async function saveInvestigation() {
     await db.collection('investigations').doc(currentInvId).update({
-        summary: document.getElementById('vSummary').value,
-        players: document.getElementById('vPlayers').value,
-        evidence: document.getElementById('vEvidence').value,
-        findings: document.getElementById('vFindings').value,
-        outcome: document.getElementById('vOutcome').value
+        summary: document.getElementById('vSummary').value, people: document.getElementById('vPeople').value, findings: document.getElementById('vFindings').value
     });
-    audit('Updated Investigation', currentInvId, 'investigation');
+    auditLog('Updated Investigation', currentInvId, 'investigation');
     closeModals();
-};
+}
 
-document.getElementById('btnCloseInvestigation').onclick = async () => {
-    if (confirm("Close this case and archive the decision?")) {
-        await db.collection('investigations').doc(currentInvId).update({ status: 'archived' });
-        audit('Archived Investigation', currentInvId, 'investigation');
-        closeModals();
-    }
-};
+async function archiveCurrentInvestigation() {
+    if(!confirm("Archive this case?")) return;
+    await db.collection('investigations').doc(currentInvId).update({ status: 'archived' });
+    auditLog('Archived Investigation', currentInvId, 'investigation');
+    closeModals();
+}
 
-document.getElementById('btnLogout').onclick = () => auth.signOut();
+async function deleteCurrentInvestigation() {
+    if(!confirm("CRITICAL: Delete this case file forever?")) return;
+    await db.collection('investigations').doc(currentInvId).delete();
+    auditLog('DELETED Investigation', currentInvId, 'investigation');
+    closeModals();
+}
+
+/* ================= ARCHIVE LOGIC ================= */
+async function loadArchive() {
+    const list = document.getElementById('section-archive'); list.innerHTML = 'Loading...';
+    const [incSnap, invSnap] = await Promise.all([
+        db.collection('incidents').where('status', '==', 'archived').get(),
+        db.collection('investigations').where('status', '==', 'archived').get()
+    ]);
+    list.innerHTML = '';
+    incSnap.forEach(doc => renderArchive(doc.data(), 'Incident', list));
+    invSnap.forEach(doc => renderArchive(doc.data(), 'Investigation', list));
+}
+
+function renderArchive(d, type, container) {
+    const card = document.createElement('div');
+    card.className = 'card archived';
+    card.innerHTML = `<span class="badge" style="background:#666; color:white;">${type}</span><h4>${d.team}</h4><small>${d.incidentDate}</small>`;
+    container.appendChild(card);
+}
 </script>
-
 </body>
 </html>
