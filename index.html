@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Nepean Knights Login</title>
+  <title>Nepean Knights – Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Firebase SDKs (COMPAT – matches your dashboard) -->
+  <!-- Firebase COMPAT SDKs (REQUIRED) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
@@ -25,26 +26,28 @@
       border-radius: 12px;
       width: 100%;
       max-width: 360px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       text-align: center;
     }
 
-    .login-card img {
-      width: 120px;
+    img {
+      width: 140px;
       margin-bottom: 15px;
     }
 
     h2 {
       margin-bottom: 20px;
+      color: #E41F26;
     }
 
     input {
       width: 100%;
       padding: 12px;
-      margin-bottom: 12px;
+      margin: 10px 0;
       border-radius: 6px;
       border: 1px solid #ccc;
-      font-size: 16px;
+      box-sizing: border-box;
+      font-size: 1rem;
     }
 
     button {
@@ -54,9 +57,10 @@
       color: #FFD200;
       border: none;
       border-radius: 6px;
-      font-size: 16px;
       font-weight: bold;
+      font-size: 1rem;
       cursor: pointer;
+      margin-top: 10px;
     }
 
     button:hover {
@@ -66,48 +70,50 @@
     .error {
       color: red;
       margin-top: 10px;
-      font-size: 14px;
+      font-size: 0.9rem;
+      min-height: 18px;
     }
   </style>
 </head>
-
 <body>
 
   <div class="login-card">
     <img src="nepean-knights-logo.png" alt="Nepean Knights Logo">
     <h2>Executive Login</h2>
 
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
+    <input type="email" id="email" placeholder="Email" autocomplete="username">
+    <input type="password" id="password" placeholder="Password" autocomplete="current-password">
 
     <button onclick="login()">Login</button>
 
-    <div id="error" class="error"></div>
+    <div class="error" id="errorMsg"></div>
   </div>
 
   <script>
-    // 🔥 CORRECT Firebase Config
+    // 🔥 CORRECT Firebase Config (NO MODULES)
     const firebaseConfig = {
       apiKey: "AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
       authDomain: "nepean-knights-executive-hub.firebaseapp.com",
       projectId: "nepean-knights-executive-hub",
       storageBucket: "nepean-knights-executive-hub.appspot.com",
       messagingSenderId: "103399385512",
-      appId: "1:103399385512:web:bbd8ac65b5c8be5332159d"
+      appId: "1:103399385512:web:42335f9cdc75af8e32159d"
     };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
+    // Login function
     function login() {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
-      const errorDiv = document.getElementById("error");
+      const errorMsg = document.getElementById("errorMsg");
 
-      errorDiv.textContent = "";
+      errorMsg.textContent = "";
 
       if (!email || !password) {
-        errorDiv.textContent = "Please enter email and password.";
+        errorMsg.textContent = "Please enter email and password.";
         return;
       }
 
@@ -116,11 +122,11 @@
           window.location.href = "dashboard.html";
         })
         .catch(err => {
-          errorDiv.textContent = err.message;
+          errorMsg.textContent = err.message;
         });
     }
 
-    // Auto-redirect if already logged in
+    // If already logged in → go to dashboard
     auth.onAuthStateChanged(user => {
       if (user) {
         window.location.href = "dashboard.html";
