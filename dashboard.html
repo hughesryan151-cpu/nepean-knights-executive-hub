@@ -103,6 +103,11 @@ h2 { text-align:center; color:var(--primary-color); margin-bottom:15px; font-siz
   <!-- Dashboard Modules -->
   <div class="dashboard-grid" id="dashboardGrid"></div>
 
+  <!-- One-time Fix Button -->
+  <button id="fixResolvedBtn" style="display:block; margin:20px auto; padding:10px 15px; border-radius:6px; background:#4CAF50; color:#fff; border:none; font-weight:bold; cursor:pointer;">
+    Fix Old Cleared Injuries
+  </button>
+
   <!-- Alerts Section -->
   <div class="alerts" id="alertsSection">
     <h3>Alerts / Missing Items</h3>
@@ -245,7 +250,32 @@ function setupRealtimeListeners(){
 }
 
 loadDashboard();
+
+// One-time fix for old injuries
+document.getElementById('fixResolvedBtn').onclick = async () => {
+  if(!confirm("This will update all old cleared injuries as resolved. Continue?")) return;
+
+  const snapshot = await db.collection('injuries').get();
+  let updated = 0;
+  const now = new Date();
+
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    const returnDT = d.returnDate && d.returnTime ? new Date(d.returnDate + 'T' + d.returnTime) : null;
+    let shouldResolve = false;
+
+    if(d.statusOverride === 'Cleared') shouldResolve = true;
+    else if(returnDT && returnDT <= now) shouldResolve = true;
+
+    if(shouldResolve && !d.resolved){
+      db.collection('injuries').doc(doc.id).update({resolved: true});
+      updated++;
+    }
+  });
+
+  alert(`Resolved status updated for ${updated} injuries.`);
+  document.getElementById('fixResolvedBtn').style.display = 'none';
+};
 </script>
 </body>
 </html>
-
