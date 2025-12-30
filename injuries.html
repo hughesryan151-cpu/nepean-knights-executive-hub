@@ -3,66 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <title>Injuries – Nepean Knights</title>
-<link rel="stylesheet" href="style.css">
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
 <style>
-:root {
-  --primary-color: #E41F26;
-  --secondary-color: #FFD200;
-  --accent-color: #000000;
-  --bg-color: #FFE680;
-  --card-bg: #FFF2CC;
-  --injured-color: #FF6B6B;
-  --cleared-color: #4CAF50;
-  --alert-color: #FF4500;
-  --summary-bg: #FFF8E1;
-}
-
-body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#FFD200,#E41F26); margin:0; }
-header { display:flex; align-items:center; justify-content:space-between; background-color:var(--primary-color); color:var(--secondary-color); padding:10px 20px; }
-header img.logo { height:50px; }
-header img.banner { height:50px; }
-header button { background-color:var(--secondary-color); color:var(--accent-color); border:none; padding:10px 15px; border-radius:6px; cursor:pointer; font-weight:bold; }
-header button:hover { opacity:0.9; }
-
-main { padding:20px; }
-.card { background-color: var(--card-bg); border-radius:10px; padding:20px; margin:20px auto; max-width:1250px; box-shadow:0 2px 8px rgba(0,0,0,0.3); }
-input, textarea, select { width:100%; padding:10px; margin:8px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; }
-textarea { resize: vertical; }
-button { background-color:var(--secondary-color); color:var(--accent-color); padding:10px 15px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.2s; }
-button:hover { opacity:0.9; }
-h2 { color:var(--primary-color); text-align:center; }
-
-table { width:100%; border-collapse: collapse; margin-top:20px; font-size:14px; }
-th, td { border:1px solid #ccc; padding:10px; text-align:left; vertical-align:middle; }
-th { background-color:var(--secondary-color); color:var(--accent-color); }
-tr:nth-child(even) { background-color: #fff8dc; }
-.status-injured { background-color: var(--injured-color); color:#fff; font-weight:bold; text-align:center; }
-.status-cleared { background-color: var(--cleared-color); color:#fff; font-weight:bold; text-align:center; }
-.status-alert { background-color: var(--alert-color); color:#fff; font-weight:bold; text-align:center; animation: blink 1s infinite; }
-@keyframes blink { 0% { opacity:1; } 50% { opacity:0.3; } 100% { opacity:1; } }
-
-.filter-section { margin-top:20px; margin-bottom:10px; }
-.filter-section select { width:auto; display:inline-block; margin-right:10px; padding:5px 10px; border-radius:6px; border:1px solid #ccc; }
-
-.summary-cards { display:flex; justify-content:space-around; margin-top:20px; }
-.summary-card { flex:1; background-color:var(--summary-bg); padding:20px; margin:5px; border-radius:10px; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.2); }
-.summary-card h3 { margin:5px 0; color:var(--primary-color); }
-.summary-card p { font-size:24px; font-weight:bold; }
+body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#FFD200,#E41F26);}
+header{display:flex;justify-content:space-between;align-items:center;background:#E41F26;color:#FFD200;padding:10px 20px;}
+header img{height:50px;}
+header button{background:#FFD200;color:#000;border:none;padding:10px 15px;border-radius:6px;cursor:pointer;font-weight:bold;}
+header button:hover{opacity:0.9;}
+main{padding:20px;}
+.card{background:#FFF2CC;border-radius:10px;padding:20px;max-width:1250px;margin:20px auto;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+button{background:#FFD200;color:#000;padding:10px 15px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;transition:0.2s;}
+button:hover{opacity:0.9;}
+input,textarea,select{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:1px solid #ccc;box-sizing:border-box;}
+textarea{resize:vertical;}
+h2{text-align:center;color:#E41F26;}
+table{width:100%;border-collapse:collapse;margin-top:20px;}
+th,td{border:1px solid #ccc;padding:10px;text-align:left;}
+th{background:#FFD200;color:#000;}
+tr:nth-child(even){background:#fff8dc;}
+.status-injured{background:#FF6B6B;color:#fff;font-weight:bold;text-align:center;}
+.status-cleared{background:#4CAF50;color:#fff;font-weight:bold;text-align:center;}
+.status-alert{background:#FF4500;color:#fff;font-weight:bold;text-align:center;animation:blink 1s infinite;}
+@keyframes blink{0%{opacity:1;}50%{opacity:0.3;}100%{opacity:1;}}
+.summary-cards{display:flex;justify-content:space-around;margin-top:20px;}
+.summary-card{flex:1;background:#FFF8E1;padding:20px;margin:5px;border-radius:10px;text-align:center;box-shadow:0 2px 5px rgba(0,0,0,0.2);}
+.summary-card h3{margin:5px 0;color:#E41F26;}
+.summary-card p{font-size:24px;font-weight:bold;}
+#injuryForm{display:none;margin-top:20px;}
 </style>
 </head>
 <body>
 
 <header>
-  <div style="display:flex; align-items:center;">
-    <img src="nepean-knights-logo.png" alt="Logo" class="logo">
-    <img src="knights-banner-updated.png" alt="Banner" class="banner">
+  <div style="display:flex;align-items:center;">
+    <img src="nepean-knights-logo.png" alt="Logo">
+    <img src="knights-banner-updated.png" alt="Banner">
   </div>
   <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
 </header>
@@ -72,44 +51,29 @@ tr:nth-child(even) { background-color: #fff8dc; }
     <h2>Player Injuries</h2>
     <button onclick="showForm()"><i class="fas fa-plus"></i> Report New Injury</button>
 
-    <section id="injuryForm" style="display:none; margin-top:20px;">
+    <section id="injuryForm">
       <input type="hidden" id="injuryId">
       <input type="text" id="playerName" placeholder="Player Name">
       <input type="text" id="teamName" placeholder="Team">
       <input type="date" id="injuryDate">
-      <textarea id="injuryDescription" placeholder="Description of Injury"></textarea>
+      <textarea id="injuryDescription" placeholder="Description"></textarea>
       <textarea id="actionsTaken" placeholder="Actions Taken"></textarea>
-
       <label><input type="checkbox" id="headInjury"> Head Injury / Concussion</label>
-
       <h4>Return to Play</h4>
-      <input type="date" id="returnDate" placeholder="Return Date">
-      <input type="time" id="returnTime" placeholder="Return Time">
+      <input type="date" id="returnDate">
+      <input type="time" id="returnTime">
       <textarea id="doctorNotes" placeholder="Doctor Notes"></textarea>
-
-      <label>Attach Document (PDF/Image)</label>
+      <label>Attach Document</label>
       <input type="file" id="injuryFile">
-
       <button onclick="saveInjury()"><i class="fas fa-save"></i> Save Injury</button>
     </section>
 
-    <!-- Summary Cards -->
     <div class="summary-cards">
-      <div class="summary-card" id="totalInjuriesCard">
-        <h3>Total Injuries</h3>
-        <p>0</p>
-      </div>
-      <div class="summary-card" id="headInjuriesCard">
-        <h3>Head Injuries</h3>
-        <p>0</p>
-      </div>
-      <div class="summary-card" id="clearedPlayersCard">
-        <h3>Cleared Players</h3>
-        <p>0</p>
-      </div>
+      <div class="summary-card" id="totalInjuriesCard"><h3>Total Injuries</h3><p>0</p></div>
+      <div class="summary-card" id="headInjuriesCard"><h3>Head Injuries</h3><p>0</p></div>
+      <div class="summary-card" id="clearedPlayersCard"><h3>Cleared Players</h3><p>0</p></div>
     </div>
 
-    <!-- Filters -->
     <div class="filter-section">
       <label>Filter Status:</label>
       <select id="statusFilter" onchange="loadInjuries()">
@@ -120,33 +84,18 @@ tr:nth-child(even) { background-color: #fff8dc; }
       </select>
     </div>
 
-    <!-- Injury Table -->
-    <h3 style="margin-top:10px;">Injury Dashboard</h3>
+    <h3>Injury Dashboard</h3>
     <table>
       <thead>
         <tr>
-          <th>Player</th>
-          <th>Team</th>
-          <th>Date</th>
-          <th>Description</th>
-          <th>Head Injury</th>
-          <th>Actions Taken</th>
-          <th>Return Date/Time</th>
-          <th>Doctor Notes</th>
-          <th>File</th>
-          <th>Status</th>
-          <th>Admin Override</th>
-          <th>Edit</th>
-          <th>Reported</th>
+          <th>Player</th><th>Team</th><th>Date</th><th>Description</th><th>Head Injury</th><th>Actions Taken</th><th>Return Date/Time</th><th>Doctor Notes</th><th>File</th><th>Status</th><th>Admin Override</th><th>Edit</th><th>Reported</th>
         </tr>
       </thead>
       <tbody id="injuryList"></tbody>
     </table>
   </div>
 
-  <button onclick="window.location.href='dashboard.html'" style="margin:20px auto; display:block;">
-    <i class="fas fa-arrow-left"></i> Back to Dashboard
-  </button>
+  <button onclick="window.location.href='dashboard.html'" style="margin:20px auto;display:block;"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
 </main>
 
 <script>
@@ -163,9 +112,12 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-auth.onAuthStateChanged(user => { if(!user) window.location.href="index.html"; });
-function logout(){ auth.signOut().then(()=> window.location.href="index.html"); }
+auth.onAuthStateChanged(user => {
+  if(!user) window.location.href="index.html";
+  else loadInjuries(); // Only load injuries after auth
+});
 
+function logout(){ auth.signOut().then(()=>window.location.href="index.html"); }
 function showForm(){ document.getElementById('injuryForm').style.display='block'; }
 
 async function uploadFile(file, playerName){
@@ -188,38 +140,18 @@ async function saveInjury(){
   const file = document.getElementById('injuryFile').files[0];
   const injuryId = document.getElementById('injuryId').value;
 
-  if(!playerName || !teamName || !date || !description){
-    alert('Please fill all required fields');
-    return;
-  }
-
-  if(headInjury && !doctorNotes && returnDate && returnTime){
-    alert('For head injuries, doctor notes are required before return to play.');
-    return;
-  }
+  if(!playerName || !teamName || !date || !description){ alert('Fill required fields'); return; }
+  if(headInjury && !doctorNotes && returnDate && returnTime){ alert('Doctor notes required for head injury'); return; }
 
   const fileUrl = await uploadFile(file, playerName);
+  const injuryData = { playerName, teamName, date, description, actions, headInjury, returnDate, returnTime, doctorNotes, statusOverride:'', resolved:false, fileUrl:fileUrl||null, timestamp:firebase.firestore.FieldValue.serverTimestamp() };
 
-  const injuryData = {
-    playerName, teamName, date, description, actions,
-    headInjury, returnDate, returnTime, doctorNotes,
-    statusOverride: '',
-    resolved: false,
-    fileUrl: fileUrl || null,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  if (injuryId) {
-    await db.collection('injuries').doc(injuryId).update(injuryData);
-    alert('Injury updated!');
-  } else {
-    await db.collection('injuries').add(injuryData);
-    alert('Injury report saved!');
-  }
+  if(injuryId) await db.collection('injuries').doc(injuryId).update(injuryData);
+  else await db.collection('injuries').add(injuryData);
 
   document.getElementById('injuryForm').reset();
-  document.getElementById('injuryId').value = '';
-  document.getElementById('injuryForm').style.display = 'none';
+  document.getElementById('injuryId').value='';
+  document.getElementById('injuryForm').style.display='none';
   loadInjuries();
 }
 
@@ -241,62 +173,43 @@ function editInjury(id){
 }
 
 function overrideStatus(docId, newStatus){
-  db.collection('injuries').doc(docId).update({statusOverride: newStatus})
-    .then(()=> loadInjuries());
+  db.collection('injuries').doc(docId).update({statusOverride:newStatus}).then(()=>loadInjuries());
 }
 
-// Fixed loadInjuries function
 function loadInjuries(){
   const tbody = document.getElementById('injuryList');
   const filter = document.getElementById('statusFilter').value;
   tbody.innerHTML='';
 
-  let totalInjuries = 0;
-  let headInjuries = 0;
-  let clearedPlayers = 0;
-
+  let total=0, head=0, cleared=0;
   db.collection('injuries').orderBy('timestamp','desc').get().then(snapshot=>{
     snapshot.forEach(doc=>{
       const d = doc.data();
-      const returnDateTime = d.returnDate && d.returnTime ? `${d.returnDate} ${d.returnTime}` : '';
-      const now = new Date();
-      let statusClass = 'status-injured';
-      let statusText = 'Injured';
-
       const returnDT = d.returnDate && d.returnTime ? new Date(d.returnDate+'T'+d.returnTime) : null;
       let resolved = d.resolved || false;
-      if(d.statusOverride === 'Cleared' || (returnDT && returnDT <= now)) resolved = true;
+      if(d.statusOverride==='Cleared' || (returnDT && returnDT<=new Date())) resolved=true;
 
-      if(resolved) {
-        statusClass = 'status-cleared';
-        statusText = 'Cleared';
-      } else if(d.statusOverride === 'Injured'){
-        statusClass = 'status-injured';
-        statusText = 'Injured (Admin)';
-      } else if(d.headInjury && !d.doctorNotes){
-        statusClass = 'status-alert';
-        statusText = 'Head Injury - Doctor Notes Required';
-      }
+      let statusClass='status-injured', statusText='Injured';
+      if(resolved) { statusClass='status-cleared'; statusText='Cleared'; }
+      else if(d.statusOverride==='Injured'){ statusClass='status-injured'; statusText='Injured (Admin)'; }
+      else if(d.headInjury && !d.doctorNotes){ statusClass='status-alert'; statusText='Head Injury - Doctor Notes Required'; }
 
-      totalInjuries++;
-      if(d.headInjury) headInjuries++;
-      if(resolved) clearedPlayers++;
+      total++; if(d.headInjury) head++; if(resolved) cleared++;
+      if(filter==='injured' && resolved) return;
+      if(filter==='cleared' && !resolved) return;
+      if(filter==='headInjury' && !d.headInjury) return;
 
-      if(filter === 'injured' && resolved) return;
-      if(filter === 'cleared' && !resolved) return;
-      if(filter === 'headInjury' && !d.headInjury) return;
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
         <td>${d.playerName}</td>
         <td>${d.teamName}</td>
         <td>${d.date}</td>
         <td>${d.description}</td>
-        <td>${d.headInjury ? 'Yes' : 'No'}</td>
+        <td>${d.headInjury?'Yes':'No'}</td>
         <td>${d.actions}</td>
-        <td>${returnDateTime}</td>
-        <td>${d.doctorNotes || ''}</td>
-        <td>${d.fileUrl ? `<a href="${d.fileUrl}" target="_blank">View</a>` : ''}</td>
+        <td>${d.returnDate||''} ${d.returnTime||''}</td>
+        <td>${d.doctorNotes||''}</td>
+        <td>${d.fileUrl?`<a href="${d.fileUrl}" target="_blank">View</a>`:''}</td>
         <td class="${statusClass}">${statusText}</td>
         <td>
           <select onchange="overrideStatus('${doc.id}', this.value)">
@@ -306,19 +219,17 @@ function loadInjuries(){
           </select>
         </td>
         <td><button onclick="editInjury('${doc.id}')"><i class="fas fa-edit"></i> Edit</button></td>
-        <td>${d.timestamp ? d.timestamp.toDate().toLocaleString() : ''}</td>
+        <td>${d.timestamp?d.timestamp.toDate().toLocaleString():''}</td>
       `;
       tbody.appendChild(tr);
     });
 
-    document.querySelector('#totalInjuriesCard p').innerText = totalInjuries;
-    document.querySelector('#headInjuriesCard p').innerText = headInjuries;
-    document.querySelector('#clearedPlayersCard p').innerText = clearedPlayers;
+    document.querySelector('#totalInjuriesCard p').innerText=total;
+    document.querySelector('#headInjuriesCard p').innerText=head;
+    document.querySelector('#clearedPlayersCard p').innerText=cleared;
   });
 }
-
-loadInjuries();
 </script>
-
 </body>
 </html>
+
