@@ -30,21 +30,15 @@
   --shadow-heavy: 0 8px 20px rgba(0,0,0,0.25);
 }
 
-/* Reset */
+/* Reset & Body */
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:'Segoe UI',Arial,sans-serif; min-height:100vh; background:var(--bg-gradient); color:#333; }
 
 /* Header */
-header {
-  display:flex; justify-content:space-between; align-items:center;
-  background-color:var(--primary-color); color:var(--secondary-color);
-  padding:0 20px; height:var(--header-height); box-shadow:var(--shadow-light);
-}
+header { display:flex; justify-content:space-between; align-items:center; background-color:var(--primary-color); color:var(--secondary-color); padding:0 20px; height:var(--header-height); box-shadow:var(--shadow-light); }
 header .logo-banner { display:flex; align-items:center; gap:10px; }
 header img.logo, header img.banner { height:50px; }
-header button { background-color:var(--secondary-color); color:var(--accent-color);
-  border:none; padding:10px 18px; border-radius:var(--border-radius);
-  cursor:pointer; font-weight:bold; transition:opacity 0.2s; }
+header button { background-color:var(--secondary-color); color:var(--accent-color); border:none; padding:10px 18px; border-radius:var(--border-radius); cursor:pointer; font-weight:bold; transition:opacity 0.2s; }
 header button:hover{opacity:0.85;}
 
 /* Main */
@@ -142,7 +136,6 @@ const modules=[
 let alertsArr = [];
 
 function loadDashboard(){
-  // Generate summary cards
   const summaryGrid = document.getElementById('summaryGrid');
   const summaryMetrics = [
     {name:'Injured Players', icon:'fas fa-procedures', id:'injuredCount'},
@@ -157,7 +150,6 @@ function loadDashboard(){
     summaryGrid.appendChild(card);
   });
 
-  // Generate dashboard modules
   const grid = document.getElementById('dashboardGrid'); grid.innerHTML='';
   modules.forEach(mod=>{
     const box = document.createElement('div'); box.className='dashboard-box';
@@ -173,7 +165,7 @@ function loadDashboard(){
   setupRealtimeListeners();
 }
 
-// Helper: update badge and status bar
+// Update badge helper
 function updateBadge(id,count,label='Pending',status='pending'){
   const badge=document.getElementById(`badge-${id.replace(/\s/g,'')}`);
   const bar=document.getElementById(`status-${id.replace(/\s/g,'')}`);
@@ -187,7 +179,7 @@ function updateBadge(id,count,label='Pending',status='pending'){
   }
 }
 
-// Render alerts
+// Alerts render
 function renderAlerts(){
   const alertsList=document.getElementById('alertsList');
   const searchText=document.getElementById('alertSearch').value.toLowerCase();
@@ -202,18 +194,16 @@ function renderAlerts(){
 }
 function filterAlerts(){ renderAlerts(); }
 
-// Real-time listeners
+// Realtime listeners
 function setupRealtimeListeners(){
   alertsArr=[];
 
   // Injured Players
-  db.collection('injuries').onSnapshot(snap => {
-    let injured = 0;
-    snap.forEach(doc => { if(!doc.data().resolved) injured++; });
-    // Summary card
+  db.collection('injuries').onSnapshot(snap=>{
+    let injured=0;
+    snap.forEach(doc=>{ if(!doc.data().resolved) injured++; });
     document.getElementById('injuredCount').textContent = injured;
-    // Dashboard badge
-    updateBadge('Injuries', injured, 'Active', injured>0?'inprogress':'completed');
+    updateBadge('Injuries', injured,'Active', injured>0?'inprogress':'completed');
   });
 
   // Active Suspensions
@@ -240,7 +230,6 @@ function setupRealtimeListeners(){
     updateBadge('Investigations', pending,'Pending','pending');
   });
 
-  // Other dashboard modules
   const monitorCollection=(collection, processDoc, badgeId, status='pending', label='Pending')=>{
     db.collection(collection).onSnapshot(snap=>{
       let count=0;
@@ -260,5 +249,3 @@ loadDashboard();
 </body>
 </html>
 
-</body>
-</html>
