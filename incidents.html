@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
 <style>
 :root { --primary-color:#E41F26; --secondary-color:#FFD200; --accent-color:#000; --card-bg:#FFF2CC; }
 body{margin:0; font-family:Arial,sans-serif; background:linear-gradient(135deg,#FFD200,#E41F26); color:var(--accent-color);}
@@ -156,10 +157,20 @@ button:hover{opacity:0.9;}
 
 <script>
 // ---------------- Firebase ----------------
-const firebaseConfig={apiKey:"AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",authDomain:"nepean-knights-executive-hub.firebaseapp.com",projectId:"nepean-knights-executive-hub",storageBucket:"nepean-knights-executive-hub.appspot.com",messagingSenderId:"103399385512",appId:"1:103399385512:web:bbd8ac65b5c8be5332159d"};
+const firebaseConfig={
+  apiKey:"AIzaSyAinnWRDZZae0fyeCM--CEhTaRvyOK8hD8",
+  authDomain:"nepean-knights-executive-hub.firebaseapp.com",
+  projectId:"nepean-knights-executive-hub",
+  storageBucket:"nepean-knights-executive-hub.appspot.com",
+  messagingSenderId:"103399385512",
+  appId:"1:103399385512:web:bbd8ac65b5c8be5332159d"
+};
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth(); const db=firebase.firestore(); const storage=firebase.storage();
-let editingIncidentId=null; let editingInvestigationId=null;
+const auth=firebase.auth();
+const db=firebase.firestore();
+const storage=firebase.storage();
+let editingIncidentId=null;
+let editingInvestigationId=null;
 
 // ---------------- Auth ----------------
 auth.onAuthStateChanged(user=>{if(!user)window.location.href="index.html";});
@@ -195,16 +206,9 @@ function backToDashboard(type){
   loadIncidents(); loadInvestigations();
 }
 
-// ---------------- Incident Functions ----------------
-// Add full functions here: openIncidentModal, closeIncidentModal, saveIncident, editIncident, sendToInvestigation, closeIncident, reopenIncident, printIncident, loadIncidents
-// ---------------- Investigation Functions ----------------
-// Add full functions here: openInvestigationModal, closeInvestigationModal, saveInvestigation, editInvestigation, closeInvestigation, reopenInvestigation, printInvestigation, loadInvestigations
-</script>
-</body>
-</html>
-
+// ---------------- Incident & Investigation JS ----------------
+// (Here, you need full load/save/edit/close/reopen/send/print functions like previously discussed)
 
 </script>
 </body>
 </html>
-
